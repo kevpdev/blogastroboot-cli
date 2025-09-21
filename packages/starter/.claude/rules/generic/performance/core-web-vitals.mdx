@@ -1,0 +1,370 @@
+---
+description: Core Web Vitals optimization and performance targets
+---
+
+# Core Web Vitals
+
+## Performance Targets
+
+### Core Web Vitals Thresholds
+- **LCP (Largest Contentful Paint)**: < 2.5s
+- **FID (First Input Delay)**: < 100ms
+- **CLS (Cumulative Layout Shift)**: < 0.1
+
+### Additional Metrics
+- **FCP (First Contentful Paint)**: < 1.8s
+- **TTI (Time to Interactive)**: < 3.8s
+- **TBT (Total Blocking Time)**: < 200ms
+
+## Largest Contentful Paint (LCP)
+
+### Optimization Strategies
+```astro
+---
+// ✅ Optimize hero images for LCP
+import { Image } from 'astro:assets';
+import heroImage from '../assets/hero.webp';
+---
+
+<!-- ✅ Preload critical LCP image -->
+<link rel="preload" as="image" href={heroImage.src} />
+
+<!-- ✅ Optimized hero image -->
+<Image
+  src={heroImage}
+  alt="Hero image"
+  width={1200}
+  height={675}
+  loading="eager"
+  decoding="sync"
+  class="w-full h-auto"
+/>
+```
+
+### Resource Prioritization
+```astro
+---
+// ✅ Critical resource hints
+---
+
+<head>
+  <!-- ✅ Preload critical fonts -->
+  <link
+    rel="preload"
+    href="/fonts/inter-var.woff2"
+    as="font"
+    type="font/woff2"
+    crossorigin
+  />
+
+  <!-- ✅ Preconnect to external domains -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+  <!-- ✅ Critical CSS inlined -->
+  <style>
+    /* Critical above-the-fold styles */
+    body { font-family: 'Inter var', sans-serif; }
+    .hero { min-height: 50vh; }
+  </style>
+</head>
+```
+
+### Image Optimization
+```typescript
+// ✅ Responsive image configuration
+const imageConfig = {
+  formats: ['avif', 'webp', 'jpeg'],
+  quality: 80,
+  densities: [1, 2],
+  widths: [400, 800, 1200, 1600],
+};
+
+// ✅ Lazy loading for non-critical images
+<Image
+  src={image}
+  alt={alt}
+  width={800}
+  height={450}
+  loading="lazy"
+  decoding="async"
+  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+/>
+```
+
+## First Input Delay (FID)
+
+### JavaScript Optimization
+```typescript
+// ✅ Use web workers for heavy computation
+function processDataInWorker(data: unknown[]): Promise<ProcessedData[]> {
+  return new Promise((resolve) => {
+    const worker = new Worker('/workers/data-processor.js');
+
+    worker.postMessage(data);
+
+    worker.onmessage = (event) => {
+      resolve(event.data);
+      worker.terminate();
+    };
+  });
+}
+
+// ✅ Break up long tasks
+async function processLargeDataset(items: DataItem[]): Promise<ProcessedItem[]> {
+  const results: ProcessedItem[] = [];
+  const batchSize = 100;
+
+  for (let i = 0; i < items.length; i += batchSize) {
+    const batch = items.slice(i, i + batchSize);
+    const processed = batch.map(processItem);
+    results.push(...processed);
+
+    // Yield to main thread
+    await new Promise(resolve => globalThis.setTimeout(resolve, 0));
+  }
+
+  return results;
+}
+```
+
+### Event Handler Optimization
+```typescript
+// ✅ Debounce expensive operations
+function debounce<T extends (...args: unknown[]) => unknown>(
+  func: T,
+  delay: number
+): (...args: Parameters<T>) => void {
+  let timeoutId: ReturnType<typeof setTimeout>;
+
+  return (...args: Parameters<T>) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => func(...args), delay);
+  };
+}
+
+// ✅ Use passive event listeners
+document.addEventListener('scroll', handleScroll, { passive: true });
+document.addEventListener('touchstart', handleTouch, { passive: true });
+
+// ✅ Optimize click handlers
+const optimizedClickHandler = debounce((event: MouseEvent) => {
+  // Expensive operation
+  performComplexCalculation();
+}, 100);
+```
+
+## Cumulative Layout Shift (CLS)
+
+### Layout Stability
+```astro
+---
+// ✅ Reserve space for dynamic content
+---
+
+<!-- ✅ Fixed dimensions for images -->
+<div class="aspect-[16/9] overflow-hidden">
+  <Image
+    src={image}
+    alt={alt}
+    width={1600}
+    height={900}
+    class="w-full h-full object-cover"
+  />
+</div>
+
+<!-- ✅ Skeleton loading states -->
+<div class="space-y-4">
+  {isLoading ? (
+    <>
+      <div class="h-6 bg-gray-200 rounded animate-pulse"></div>
+      <div class="h-4 bg-gray-200 rounded animate-pulse w-3/4"></div>
+      <div class="h-4 bg-gray-200 rounded animate-pulse w-1/2"></div>
+    </>
+  ) : (
+    <div class="content">
+      <!-- Actual content -->
+    </div>
+  )}
+</div>
+```
+
+### Font Loading Strategy
+```css
+/* ✅ Prevent font layout shifts */
+@font-face {
+  font-family: 'Inter var';
+  src: url('/fonts/inter-var.woff2') format('woff2');
+  font-display: swap;
+  font-weight: 100 900;
+}
+
+/* ✅ Fallback font with similar metrics */
+body {
+  font-family: 'Inter var', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+}
+
+/* ✅ Preload critical fonts */
+```
+
+### Dynamic Content Handling
+```typescript
+// ✅ Measure and reserve space for dynamic content
+function loadDynamicContent(container: HTMLElement): void {
+  // Measure current height
+  const currentHeight = container.offsetHeight;
+
+  // Set minimum height to prevent shift
+  container.style.minHeight = `${currentHeight}px`;
+
+  // Load content
+  loadContent().then((content) => {
+    container.innerHTML = content;
+    // Remove min-height after content loads
+    container.style.minHeight = '';
+  });
+}
+```
+
+## Resource Loading Optimization
+
+### Code Splitting
+```typescript
+// ✅ Dynamic imports for non-critical code
+async function loadThemeToggle(): Promise<void> {
+  const { ThemeToggle } = await import('./components/ThemeToggle');
+  // Initialize theme toggle
+}
+
+// ✅ Route-based code splitting (Astro does this automatically)
+// But be conscious of component imports
+
+// ✅ Conditional loading
+if (globalThis.matchMedia('(min-width: 768px)').matches) {
+  import('./desktop-features').then(({ initDesktopFeatures }) => {
+    initDesktopFeatures();
+  });
+}
+```
+
+### Critical Path Optimization
+```astro
+---
+// ✅ Inline critical CSS
+const criticalCSS = `
+  .hero { background: linear-gradient(to right, #667eea 0%, #764ba2 100%); }
+  .nav { position: fixed; top: 0; width: 100%; }
+`;
+---
+
+<head>
+  <style set:html={criticalCSS} />
+
+  <!-- ✅ Preload non-critical CSS -->
+  <link
+    rel="preload"
+    href="/styles/non-critical.css"
+    as="style"
+    onload="this.onload=null;this.rel='stylesheet'"
+  />
+</head>
+```
+
+## Performance Monitoring
+
+### Core Web Vitals Measurement
+```typescript
+// ✅ Measure and report Core Web Vitals
+function measureCoreWebVitals(): void {
+  // LCP measurement
+  new PerformanceObserver((list) => {
+    const entries = list.getEntries();
+    const lastEntry = entries[entries.length - 1];
+
+    console.log('LCP:', lastEntry.startTime);
+    reportMetric('LCP', lastEntry.startTime);
+  }).observe({ entryTypes: ['largest-contentful-paint'] });
+
+  // FID measurement
+  new PerformanceObserver((list) => {
+    const entries = list.getEntries();
+
+    entries.forEach((entry) => {
+      console.log('FID:', entry.processingStart - entry.startTime);
+      reportMetric('FID', entry.processingStart - entry.startTime);
+    });
+  }).observe({ entryTypes: ['first-input'] });
+
+  // CLS measurement
+  let clsValue = 0;
+  new PerformanceObserver((list) => {
+    const entries = list.getEntries();
+
+    entries.forEach((entry) => {
+      if (!entry.hadRecentInput) {
+        clsValue += entry.value;
+      }
+    });
+
+    console.log('CLS:', clsValue);
+    reportMetric('CLS', clsValue);
+  }).observe({ entryTypes: ['layout-shift'] });
+}
+
+function reportMetric(name: string, value: number): void {
+  // Send to analytics
+  if (import.meta.env.PROD) {
+    // gtag('event', name, { value });
+  }
+}
+```
+
+### Performance Budget
+```typescript
+// ✅ Performance budget configuration
+const performanceBudget = {
+  lcp: 2500, // milliseconds
+  fid: 100,  // milliseconds
+  cls: 0.1,  // score
+  fcp: 1800, // milliseconds
+  tti: 3800, // milliseconds
+};
+
+function validatePerformance(metrics: PerformanceMetrics): void {
+  Object.entries(performanceBudget).forEach(([metric, budget]) => {
+    if (metrics[metric] > budget) {
+      console.warn(`Performance budget exceeded for ${metric}: ${metrics[metric]} > ${budget}`);
+    }
+  });
+}
+```
+
+## Performance Checklist
+
+### Image Optimization
+- [ ] Images use modern formats (WebP/AVIF)
+- [ ] Critical images use `loading="eager"`
+- [ ] Non-critical images use `loading="lazy"`
+- [ ] Images have proper dimensions specified
+- [ ] Responsive images use `sizes` attribute
+
+### JavaScript
+- [ ] Critical JavaScript is inlined
+- [ ] Non-critical JavaScript is deferred
+- [ ] Long tasks are broken up or moved to workers
+- [ ] Event listeners use passive flag where appropriate
+- [ ] Third-party scripts are loaded efficiently
+
+### CSS
+- [ ] Critical CSS is inlined
+- [ ] Non-critical CSS is preloaded
+- [ ] Fonts use `font-display: swap`
+- [ ] Layout shifts are minimized
+- [ ] Unused CSS is removed
+
+### Core Web Vitals
+- [ ] LCP < 2.5s
+- [ ] FID < 100ms
+- [ ] CLS < 0.1
+- [ ] Performance is monitored and reported
+- [ ] Performance budgets are defined and enforced

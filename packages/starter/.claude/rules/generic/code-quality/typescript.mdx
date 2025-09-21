@@ -1,0 +1,314 @@
+---
+description: TypeScript standards and best practices
+---
+
+# TypeScript Standards
+
+## Type System
+
+### Core Principles
+- Type everything explicitly
+- Never use `any`, prefer `unknown` if needed
+- Avoid `as` for type conversion, use type guards
+- Use generics for reusable functions
+- Use descriptive type parameter names
+
+### Type vs Interface
+```typescript
+// ✅ Use `interface` for extensible objects
+interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+interface AdminUser extends User {
+  permissions: Permission[];
+}
+
+// ✅ Use `type` for unions and primitives
+type Status = 'pending' | 'approved' | 'rejected';
+type UserRole = 'admin' | 'user' | 'guest';
+type EventHandler<T> = (event: T) => void;
+```
+
+### Strict Configuration
+```typescript
+// ✅ Always use strict TypeScript settings
+// tsconfig.json
+{
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true
+  }
+}
+```
+
+## Interface Design
+
+### Explicit Interfaces
+```typescript
+// ✅ Good: Explicit, well-defined interface
+interface CreateUserRequest {
+  name: string;
+  email: string;
+  role: UserRole;
+  preferences?: UserPreferences;
+}
+
+interface UserPreferences {
+  theme: 'light' | 'dark' | 'auto';
+  notifications: boolean;
+  language: string;
+}
+
+// ❌ Bad: Vague, any-typed interface
+interface UserData {
+  info: any;
+  settings: any;
+}
+```
+
+### Generic Interfaces
+```typescript
+// ✅ Good: Reusable generic interfaces
+interface ApiResponse<TData> {
+  data: TData;
+  status: 'success' | 'error';
+  message?: string;
+  timestamp: Date;
+}
+
+interface PaginatedResponse<TItem> {
+  items: TItem[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}
+
+// Usage
+type UserListResponse = PaginatedResponse<User>;
+type UserResponse = ApiResponse<User>;
+```
+
+## Type Guards and Validation
+
+### Type Guards
+```typescript
+// ✅ Good: Explicit type guards
+function isString(value: unknown): value is string {
+  return typeof value === 'string';
+}
+
+function isUser(obj: unknown): obj is User {
+  return typeof obj === 'object' &&
+         obj !== null &&
+         'id' in obj &&
+         'name' in obj &&
+         'email' in obj;
+}
+
+function hasProperty<K extends string>(
+  obj: unknown,
+  key: K
+): obj is Record<K, unknown> {
+  return typeof obj === 'object' && obj !== null && key in obj;
+}
+```
+
+### Assertion Functions
+```typescript
+// ✅ Good: Assertion functions for validation
+function assertIsNumber(value: unknown): asserts value is number {
+  if (typeof value !== 'number') {
+    throw createError('validation', 'Expected number');
+  }
+}
+
+function assertIsUser(obj: unknown): asserts obj is User {
+  if (!isUser(obj)) {
+    throw createError('validation', 'Invalid user object');
+  }
+}
+
+// Usage
+function processUserData(data: unknown) {
+  assertIsUser(data);
+  // TypeScript now knows data is User
+  console.log(data.name);
+}
+```
+
+## Union Types and Enums
+
+### String Literal Unions
+```typescript
+// ✅ Prefer string literal unions to enums
+type Theme = 'light' | 'dark' | 'auto';
+type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
+type LoadingState = 'idle' | 'loading' | 'success' | 'error';
+
+// ✅ Good for state management
+interface AppState {
+  user: User | null;
+  theme: Theme;
+  loadingState: LoadingState;
+}
+```
+
+### When to Use Enums
+```typescript
+// ✅ Use enums when you need explicit values
+enum HttpStatusCode {
+  OK = 200,
+  CREATED = 201,
+  BAD_REQUEST = 400,
+  UNAUTHORIZED = 401,
+  NOT_FOUND = 404,
+  INTERNAL_SERVER_ERROR = 500
+}
+
+// Usage
+if (response.status === HttpStatusCode.NOT_FOUND) {
+  // Handle 404
+}
+```
+
+## Generics and Utility Types
+
+### Generic Functions
+```typescript
+// ✅ Good: Descriptive generic names
+function createAsyncFunction<TInput, TOutput>(
+  processor: (input: TInput) => Promise<TOutput>
+) {
+  return async (input: TInput): Promise<TOutput> => {
+    return await processor(input);
+  };
+}
+
+// ✅ Constrained generics
+function processCollection<TItem extends { id: string }>(
+  items: TItem[],
+  processor: (item: TItem) => TItem
+): TItem[] {
+  return items.map(processor);
+}
+```
+
+### Utility Types
+```typescript
+// ✅ Use built-in utility types
+type PartialUser = Partial<User>;
+type RequiredUser = Required<User>;
+type UserEmail = Pick<User, 'email'>;
+type UserWithoutId = Omit<User, 'id'>;
+
+// ✅ Custom utility types
+type PartialExcept<T, K extends keyof T> = Partial<T> & Pick<T, K>;
+type CreateUserInput = PartialExcept<User, 'name' | 'email'>;
+
+type ValuesOf<T> = T[keyof T];
+type UserRoleValues = ValuesOf<typeof UserRole>;
+```
+
+## Error Handling Types
+
+### Error Type System
+```typescript
+// ✅ Well-defined error types
+type ErrorType = 'validation' | 'network' | 'content' | 'system' | 'unknown';
+
+interface AppError {
+  type: ErrorType;
+  message: string;
+  details?: string;
+  code?: string;
+  timestamp: Date;
+}
+
+class CustomError extends Error {
+  readonly type: ErrorType;
+  readonly details?: string;
+  readonly code?: string;
+  readonly timestamp: Date;
+
+  constructor(type: ErrorType, message: string, details?: string, code?: string) {
+    super(message);
+    this.type = type;
+    this.details = details;
+    this.code = code;
+    this.timestamp = new Date();
+    this.name = 'CustomError';
+  }
+}
+```
+
+## Avoid Anti-Patterns
+
+### Common Mistakes
+```typescript
+// ❌ Never use `any`
+function processData(data: any): any {
+  return data.whatever;
+}
+
+// ✅ Use proper types or `unknown`
+function processData<T>(data: T): T {
+  return data;
+}
+
+// ❌ Avoid type assertions without validation
+const userInput = getUserInput() as User;
+
+// ✅ Use type guards
+const userInput = getUserInput();
+if (isUser(userInput)) {
+  // Now TypeScript knows it's a User
+}
+
+// ❌ Don't use function overloads unnecessarily
+function format(value: string): string;
+function format(value: number): string;
+function format(value: string | number): string {
+  return String(value);
+}
+
+// ✅ Use union types instead
+function format(value: string | number): string {
+  return String(value);
+}
+
+// ❌ Avoid optional chaining abuse
+const result = user?.profile?.settings?.theme?.preference?.color;
+
+// ✅ Use proper typing and defaults
+const theme = user?.profile?.settings?.theme ?? DEFAULT_THEME;
+const color = theme.preference?.color ?? DEFAULT_COLOR;
+```
+
+## Type Configuration Checklist
+
+### tsconfig.json Settings
+- [ ] `"strict": true` enabled
+- [ ] `"noImplicitAny": true` enabled
+- [ ] `"strictNullChecks": true` enabled
+- [ ] `"noImplicitReturns": true` enabled
+- [ ] `"noUnusedLocals": true` enabled
+- [ ] `"noUnusedParameters": true` enabled
+
+### Code Quality
+- [ ] No `any` types used
+- [ ] All functions have explicit return types
+- [ ] Interfaces are preferred for objects
+- [ ] Union types are preferred for enums
+- [ ] Generic constraints are used appropriately
+- [ ] Type guards are used instead of type assertions

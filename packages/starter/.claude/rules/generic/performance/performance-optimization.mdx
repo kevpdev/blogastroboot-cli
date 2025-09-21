@@ -1,0 +1,399 @@
+---
+description: Méthodologie d'optimisation des performances web pour sites Astro
+globs: ["**/*.astro", "**/*.ts", "**/*.js", "src/styles/**/*.css"]
+alwaysApply: false
+---
+
+# Workflow — Performance Optimization
+
+Processus systématique pour optimiser les performances d'un site Astro et atteindre des scores Lighthouse excellents.
+
+## Phase 1: Audit de performance
+
+### Étape 1: Mesurer les performances actuelles
+```bash
+# Build de production
+echo "=== PERFORMANCE BASELINE ==="
+pnpm build
+
+# Audit Lighthouse automatisé
+echo "=== LIGHTHOUSE AUDIT ==="
+npx lighthouse http://localhost:4321 --output=json --output-path=./lighthouse-before.json
+npx lighthouse http://localhost:4321 --output=html --output-path=./lighthouse-before.html
+
+# Core Web Vitals
+echo "Target metrics:"
+echo "- LCP (Largest Contentful Paint): <2.5s" 
+echo "- FID (First Input Delay): <100ms"
+echo "- CLS (Cumulative Layout Shift): <0.1"
+```
+
+### Étape 2: Analyser la taille du bundle
+```bash
+echo "=== BUNDLE ANALYSIS ==="
+du -sh dist/
+find dist -name "*.js" -exec du -h {} + | sort -hr | head -10
+find dist -name "*.css" -exec du -h {} + | sort -hr | head -5
+
+# Analyser les assets
+echo "=== ASSETS ANALYSIS ==="
+find dist -name "*.jpg" -o -name "*.png" -o -name "*.webp" -exec du -h {} + | sort -hr | head -10
+```
+
+## Phase 2: Optimisations des ressources
+
+### Étape 3: Optimisation des images
+```bash
+# Installer les outils d'optimisation
+echo "=== IMAGE OPTIMIZATION ==="
+pnpm add -D @astrojs/image sharp
+
+# Template de configuration optimisée
+cat > astro.config.image.mjs << 'EOF'
+export default defineConfig({
+  integrations: [
+    image({
+      serviceEntryPoint: '@astrojs/image/sharp',
+      cacheDir: './.cache/image',
+      logLevel: 'info',
+    })
+  ],
+  image: {
+    formats: ['avif', 'webp', 'jpg'],
+    domains: ['images.unsplash.com'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**.example.com',
+      },
+    ],
+  },
+});
+EOF
+```
+
+**Optimisations images :**
+- [ ] Utiliser le composant `<Image>` d'Astro
+- [ ] Formats modernes (AVIF, WebP) avec fallback
+- [ ] Lazy loading pour images below-the-fold
+- [ ] Responsive images avec différentes tailles
+- [ ] Compression adaptée au contenu (quality: 80-90%)
+
+### Étape 4: Optimisation des polices
+```bash
+echo "=== FONT OPTIMIZATION ==="
+
+# Template de préchargement des polices
+cat << 'EOF'
+<!-- Dans BaseHead.astro -->
+<link 
+  rel="preload" 
+  href="/fonts/Inter-Variable.woff2" 
+  as="font" 
+  type="font/woff2" 
+  crossorigin
+>
+
+<!-- CSS optimisé -->
+<style>
+  @font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap; /* Évite le FOIT/FOUT */
+    src: url('/fonts/Inter-Variable.woff2') format('woff2-variations');
+  }
+</style>
+EOF
+```
+
+### Étape 5: Optimisation CSS
+```bash
+echo "=== CSS OPTIMIZATION ==="
+
+# Analyse de la taille CSS
+find dist -name "*.css" -exec wc -c {} + | sort -nr
+
+# Template de CSS critique
+cat << 'EOF'
+<!-- Critical CSS inline dans <head> -->
+<style>
+  /* Only above-the-fold styles */
+  .hero { /* styles */ }
+  .navigation { /* styles */ }
+</style>
+
+<!-- Non-critical CSS chargé de manière asynchrone -->
+<link
+  rel="preload"
+  href="/styles/global.css"
+  as="style"
+  onload="this.onload=null;this.rel='stylesheet'"
+>
+<noscript><link rel="stylesheet" href="/styles/global.css"></noscript>
+EOF
+```
+
+## Phase 3: Optimisations de code
+
+### Étape 6: Code splitting et tree shaking
+```bash
+echo "=== CODE SPLITTING ==="
+
+# Configuration Vite pour optimisations
+cat > vite.config.optimizations.ts << 'EOF'
+export default defineConfig({
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor': ['astro'],
+          'ui': ['./src/components/ui/index.ts'],
+          'utils': ['./src/utils/index.ts'],
+        },
+      },
+    },
+    target: 'es2022',
+    cssCodeSplit: true,
+    sourcemap: false, // Disable in production
+  },
+  optimizeDeps: {
+    include: ['astro', '@astrojs/markdown-remark'],
+  },
+});
+EOF
+```
+
+### Étape 7: Optimisation du JavaScript
+```bash
+echo "=== JS OPTIMIZATION ==="
+
+# Minimiser les dépendances client-side
+echo "Audit client-side dependencies:"
+grep -r "client:" src/components/ | wc -l
+grep -r "client:load" src/components/
+grep -r "client:idle" src/components/
+grep -r "client:visible" src/components/
+```
+
+**Stratégies d'hydratation :**
+```astro
+---
+// Optimiser l'hydratation des composants
+---
+
+<!-- Chargement différé pour composants non critiques -->
+<Component client:idle />
+
+<!-- Chargement à la visibilité -->
+<Component client:visible />
+
+<!-- Chargement conditionnel -->
+<Component client:media="(max-width: 768px)" />
+
+<!-- Pas d'hydratation pour contenu statique -->
+<Component />
+```
+
+## Phase 4: Optimisations serveur/build
+
+### Étape 8: Configuration de cache
+```bash
+echo "=== CACHING STRATEGY ==="
+
+# Template de headers de cache
+cat << 'EOF'
+# .netlify/_headers ou équivalent
+/*
+  X-Frame-Options: DENY
+  X-XSS-Protection: 1; mode=block
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+  
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.css
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.js
+  Cache-Control: public, max-age=31536000, immutable
+EOF
+```
+
+### Étape 9: Minification et compression
+```bash
+echo "=== COMPRESSION ==="
+
+# Configuration de compression Astro
+cat >> astro.config.mjs << 'EOF'
+export default defineConfig({
+  build: {
+    inlineStylesheets: 'auto', // Inline small CSS
+    assetsPrefix: '/assets/', // CDN prefix
+  },
+  compressHTML: true,
+  output: 'static',
+  adapter: adapter({
+    compression: 'gzip', // or 'brotli'
+  }),
+});
+EOF
+```
+
+### Étape 10: Optimisation du rendu
+```bash
+echo "=== RENDERING OPTIMIZATION ==="
+
+# Template de composant optimisé
+cat << 'EOF'
+---
+// Éviter les re-renders inutiles
+interface Props {
+  data: readonly DataType[]; // Immutable data
+  className?: string;
+}
+
+const { data, className = '' } = Astro.props;
+
+// Pre-calculate expensive operations
+const processedData = data.map(transformData);
+const staticClasses = `component-base ${className}`;
+---
+
+<!-- Éviter les props dynamiques coûteuses -->
+<div class={staticClasses}>
+  {processedData.map(item => (
+    <div key={item.id}>{item.title}</div>
+  ))}
+</div>
+
+<style>
+  /* Éviter les styles coûteux */
+  .component-base {
+    /* Use transform for animations */
+    transform: translateZ(0); /* Force GPU acceleration */
+    will-change: transform; /* Only when needed */
+  }
+</style>
+EOF
+```
+
+## Phase 5: Validation et monitoring
+
+### Étape 11: Tests de performance
+```bash
+echo "=== PERFORMANCE TESTING ==="
+
+# Nouveau build optimisé
+pnpm build
+
+# Audit post-optimisation
+npx lighthouse http://localhost:4321 --output=json --output-path=./lighthouse-after.json
+
+# Comparaison des résultats
+echo "=== PERFORMANCE COMPARISON ==="
+echo "Before: $(cat lighthouse-before.json | jq '.lhr.categories.performance.score')"
+echo "After: $(cat lighthouse-after.json | jq '.lhr.categories.performance.score')"
+```
+
+### Étape 12: Tests de charge
+```bash
+echo "=== LOAD TESTING ==="
+
+# Tools: Artillery, k6, Apache Bench
+cat > load-test.yml << 'EOF'
+config:
+  target: 'http://localhost:4321'
+  phases:
+    - duration: 60
+      arrivalRate: 10
+scenarios:
+  - name: "Homepage load test"
+    requests:
+      - get:
+          url: "/"
+      - get:
+          url: "/blog"
+      - get:
+          url: "/about"
+EOF
+
+# Run load test
+echo "artillery run load-test.yml"
+```
+
+## Checklist d'optimisation
+
+### Images et médias
+- [ ] Format WebP/AVIF avec fallback JPG
+- [ ] Lazy loading pour images below-the-fold
+- [ ] Images responsive avec srcset
+- [ ] Compression optimale (quality: 80-90%)
+- [ ] Alt text pour toutes les images
+
+### CSS
+- [ ] CSS critique inline dans <head>
+- [ ] CSS non-critique chargé async
+- [ ] Minification activée
+- [ ] Unused CSS supprimé
+- [ ] Variables CSS pour consistance
+
+### JavaScript
+- [ ] Hydratation sélective (client:idle, client:visible)
+- [ ] Code splitting activé
+- [ ] Tree shaking configuré
+- [ ] Dépendances client minimisées
+- [ ] Polyfills seulement si nécessaires
+
+### Fonts
+- [ ] Font preloading pour polices critiques
+- [ ] font-display: swap configuré
+- [ ] Format WOFF2 avec fallbacks
+- [ ] Variable fonts utilisées si possible
+- [ ] Font subsetting pour réduire la taille
+
+### Réseau
+- [ ] Headers de cache configurés
+- [ ] Compression gzip/brotli activée
+- [ ] CDN configuré pour assets statiques
+- [ ] DNS prefetch pour domaines externes
+- [ ] Service Worker pour cache (optionnel)
+
+### Monitoring
+- [ ] Google PageSpeed Insights >90
+- [ ] Core Web Vitals dans les cibles
+- [ ] Real User Monitoring configuré
+- [ ] Alertes performance configurées
+- [ ] Tests automatisés dans CI/CD
+
+## Métriques cibles
+
+### Lighthouse Scores (minimum)
+- **Performance:** >90
+- **Accessibility:** >95
+- **Best Practices:** >95
+- **SEO:** >95
+
+### Core Web Vitals
+- **LCP (Largest Contentful Paint):** <2.5s
+- **FID (First Input Delay):** <100ms  
+- **CLS (Cumulative Layout Shift):** <0.1
+
+### Additional Metrics
+- **TTFB (Time to First Byte):** <600ms
+- **Speed Index:** <3.4s
+- **Total Blocking Time:** <200ms
+
+## Sortie attendue
+- **Performance Lighthouse >90** sur toutes les pages
+- **Core Web Vitals** dans les cibles vertes
+- **Taille de bundle optimisée** (<500KB total)
+- **Temps de chargement <3s** sur 3G
+- **Monitoring continu** des performances

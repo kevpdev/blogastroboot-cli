@@ -1,0 +1,143 @@
+---
+import ThemeToggle from '../ui/ThemeToggle.astro';
+import { navigationConfig } from '../../config/navigation.ts';
+
+// Filtrer les éléments de navigation actifs
+const activeNavItems = navigationConfig.filter(item => item.enabled !== false);
+---
+
+<header class="m-0 p-0 bg-[rgb(var(--bg-primary))] shadow-sm relative z-[100]">
+  <nav class="flex items-center justify-between p-3 max-w-[1200px] mx-auto md:p-4">
+    <h2 class="m-0 text-lg font-bold md:text-xl">
+      <a
+        href="/"
+        class="no-underline text-[rgb(var(--text-primary))]"
+        >Blog</a
+      >
+    </h2>
+
+    <!-- Mobile hamburger button -->
+    <button
+      class="mobile-menu-btn flex flex-col justify-around w-8 h-8 bg-transparent border-0 cursor-pointer p-0 z-[110] md:hidden"
+      aria-label="Toggle mobile menu">
+      <span
+        class="hamburger-line w-full h-1 bg-[rgb(var(--text-primary))] rounded transition-all duration-300 origin-[1px]"
+      ></span>
+      <span
+        class="hamburger-line w-full h-1 bg-[rgb(var(--text-primary))] rounded transition-all duration-300 origin-[1px]"
+      ></span>
+      <span
+        class="hamburger-line w-full h-1 bg-[rgb(var(--text-primary))] rounded transition-all duration-300 origin-[1px]"
+      ></span>
+    </button>
+
+    <!-- Desktop navigation -->
+    <div class="nav-content hidden items-center gap-8 md:flex">
+      <div class="internal-links flex gap-6">
+        {
+          activeNavItems.map((item) => (
+            <a
+              href={item.href}
+              class="text-[rgb(var(--text-primary))] hover:text-[rgb(var(--brand-primary))] transition-colors font-medium">
+              {item.label}
+            </a>
+          ))
+        }
+      </div>
+      <div class="nav-actions flex items-center gap-4">
+        <ThemeToggle />
+      </div>
+    </div>
+  </nav>
+
+  <!-- Mobile menu overlay -->
+  <div
+    class="mobile-menu fixed top-0 left-0 w-full h-screen bg-black/50 z-[105] opacity-0 pointer-events-none transition-opacity duration-300 md:hidden">
+    <div
+      class="mobile-menu-content absolute top-0 right-0 w-screen h-full bg-[rgb(var(--bg-primary))] pt-16 px-6 pb-8 translate-x-full transition-transform duration-300 flex flex-col gap-8 md:w-[280px] md:pt-20 md:px-8">
+      <div class="flex flex-col gap-4">
+        {
+          activeNavItems.map((item) => (
+            <a
+              href={item.href}
+              class="text-[rgb(var(--text-primary))] hover:text-[rgb(var(--brand-primary))] transition-colors font-medium py-2">
+              {item.label}
+            </a>
+          ))
+        }
+      </div>
+      <div
+        class="mobile-actions mt-auto pt-8 border-t border-[rgb(var(--border-primary))] flex flex-col gap-4 items-start">
+        <ThemeToggle />
+      </div>
+    </div>
+  </div>
+</header>
+
+<script>
+  // Mobile menu toggle
+  document.addEventListener('DOMContentLoaded', () => {
+    const menuBtn = document.querySelector('.mobile-menu-btn');
+    const mobileMenu = document.querySelector('.mobile-menu');
+    const hamburgerLines = document.querySelectorAll('.hamburger-line');
+    const body = document.body;
+
+    menuBtn?.addEventListener('click', () => {
+      const isOpen = mobileMenu?.classList.contains('active');
+
+      if (isOpen) {
+        mobileMenu?.classList.remove('active');
+        mobileMenu?.classList.remove('opacity-100', 'pointer-events-auto');
+        mobileMenu?.classList.add('opacity-0', 'pointer-events-none');
+
+        const menuContent = mobileMenu?.querySelector('.mobile-menu-content');
+        menuContent?.classList.remove('translate-x-0');
+        menuContent?.classList.add('translate-x-full');
+
+        body.classList.remove('mobile-menu-open');
+        menuBtn.setAttribute('aria-expanded', 'false');
+
+        // Reset hamburger animation
+        hamburgerLines[0]?.classList.remove('rotate-45');
+        hamburgerLines[1]?.classList.remove('opacity-0');
+        hamburgerLines[2]?.classList.remove('-rotate-45');
+      } else {
+        mobileMenu?.classList.add('active');
+        mobileMenu?.classList.remove('opacity-0', 'pointer-events-none');
+        mobileMenu?.classList.add('opacity-100', 'pointer-events-auto');
+
+        const menuContent = mobileMenu?.querySelector('.mobile-menu-content');
+        menuContent?.classList.remove('translate-x-full');
+        menuContent?.classList.add('translate-x-0');
+
+        body.classList.add('mobile-menu-open');
+        menuBtn.setAttribute('aria-expanded', 'true');
+
+        // Animate hamburger to X
+        hamburgerLines[0]?.classList.add('rotate-45');
+        hamburgerLines[1]?.classList.add('opacity-0');
+        hamburgerLines[2]?.classList.add('-rotate-45');
+      }
+    });
+
+    // Close menu on link click
+    mobileMenu?.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement)?.tagName === 'A') {
+        mobileMenu.classList.remove('active', 'opacity-100', 'pointer-events-auto');
+        mobileMenu.classList.add('opacity-0', 'pointer-events-none');
+
+        const menuContent = mobileMenu?.querySelector('.mobile-menu-content');
+        menuContent?.classList.remove('translate-x-0');
+        menuContent?.classList.add('translate-x-full');
+
+        body.classList.remove('mobile-menu-open');
+        menuBtn?.setAttribute('aria-expanded', 'false');
+
+        // Reset hamburger
+        hamburgerLines[0]?.classList.remove('rotate-45');
+        hamburgerLines[1]?.classList.remove('opacity-0');
+        hamburgerLines[2]?.classList.remove('-rotate-45');
+      }
+    });
+  });
+</script>

@@ -1,0 +1,240 @@
+---
+description: Clean code principles and quality standards
+---
+
+# Clean Code Principles
+
+## Code Quality Rules
+
+### Fundamental Principles
+- Write no comments unless absolutely necessary
+- Use strict types only
+- Disallow untyped values
+- Use explicit constants, never magic numbers
+- Avoid double negatives
+- Use long, readable variable names
+- Write the simplest code possible
+- Eliminate duplication (DRY)
+
+### Length Limits
+- Max 30 lines per function
+- Max 5 parameters per function
+- Max 300 lines per file
+- Max 10 sub-files per folder
+
+### Architecture Patterns
+- One responsibility per file
+- No flag parameters
+- Fail fast, throw errors early
+- Smart/dumb component pattern (frontend)
+
+## Function Design
+
+### Function Rules
+```typescript
+// ✅ Good: Single responsibility, clear name
+function calculateTotalPriceWithTax(price: number, taxRate: number): number {
+  const tax = price * taxRate;
+  return price + tax;
+}
+
+// ❌ Bad: Multiple responsibilities, unclear name
+function process(data: any): any {
+  // Does validation, calculation, and formatting
+}
+```
+
+### Parameter Guidelines
+```typescript
+// ✅ Good: Few parameters, clear types
+function createUser(name: string, email: string, role: UserRole): User {
+  return { name, email, role };
+}
+
+// ❌ Bad: Too many parameters
+function createUser(name: string, email: string, age: number, role: string, active: boolean, country: string): User {
+  // Too many parameters - use an object instead
+}
+
+// ✅ Better: Object parameter
+function createUser(userData: CreateUserRequest): User {
+  return userData;
+}
+```
+
+## Variable and Naming
+
+### Naming Conventions
+```typescript
+// ✅ Good: Descriptive, specific names
+const userAccountBalance = 1500;
+const isUserEmailVerified = true;
+const calculateMonthlyInterestRate = (balance: number) => balance * 0.02;
+
+// ❌ Bad: Abbreviated, unclear names
+const bal = 1500;
+const verified = true;
+const calc = (b: number) => b * 0.02;
+```
+
+### Constants vs Magic Numbers
+```typescript
+// ✅ Good: Named constants
+const MAX_LOGIN_ATTEMPTS = 3;
+const DEFAULT_TIMEOUT_MS = 5000;
+const TAX_RATE_PERCENTAGE = 0.08;
+
+if (loginAttempts > MAX_LOGIN_ATTEMPTS) {
+  lockAccount();
+}
+
+// ❌ Bad: Magic numbers
+if (loginAttempts > 3) {
+  lockAccount();
+}
+```
+
+## Code Organization
+
+### File Structure
+```typescript
+// ✅ Good: One main export per file
+// user-service.ts
+export class UserService {
+  // Single responsibility: user operations
+}
+
+// user-types.ts
+export interface User {
+  // Types related to users
+}
+
+// ❌ Bad: Multiple unrelated exports
+// utils.ts
+export class UserService { }
+export class EmailService { }
+export class DatabaseConnection { }
+```
+
+### Function Composition
+```typescript
+// ✅ Good: Small, composable functions
+const validateEmail = (email: string): boolean => {
+  return email.includes('@') && email.includes('.');
+};
+
+const sanitizeUserInput = (input: string): string => {
+  return input.trim().toLowerCase();
+};
+
+const processUserRegistration = (email: string): User => {
+  const sanitizedEmail = sanitizeUserInput(email);
+
+  if (!validateEmail(sanitizedEmail)) {
+    throw createError('validation', 'Invalid email format');
+  }
+
+  return createUser(sanitizedEmail);
+};
+
+// ❌ Bad: Large, monolithic function
+const processUserRegistration = (email: string): User => {
+  // 50+ lines of validation, sanitization, and creation logic
+};
+```
+
+## Error Handling
+
+### Fail Fast Principle
+```typescript
+// ✅ Good: Early validation and errors
+function calculateDiscount(price: number, discountPercentage: number): number {
+  if (price < 0) {
+    throw createError('validation', 'Price cannot be negative');
+  }
+
+  if (discountPercentage < 0 || discountPercentage > 100) {
+    throw createError('validation', 'Discount percentage must be between 0 and 100');
+  }
+
+  return price * (discountPercentage / 100);
+}
+
+// ❌ Bad: Late validation, unclear errors
+function calculateDiscount(price: number, discountPercentage: number): number {
+  const result = price * (discountPercentage / 100);
+
+  if (price < 0 || discountPercentage < 0) {
+    return 0; // Silent failure
+  }
+
+  return result;
+}
+```
+
+## Anti-Patterns to Avoid
+
+### Common Mistakes
+```typescript
+// ❌ Comments explaining what code does
+function calculateTotal() {
+  // Add tax to the price
+  const tax = price * 0.08;
+  // Return the total with tax
+  return price + tax;
+}
+
+// ✅ Self-documenting code
+function calculateTotalWithTax() {
+  const taxAmount = price * TAX_RATE;
+  return price + taxAmount;
+}
+
+// ❌ Nested conditions
+if (user) {
+  if (user.isActive) {
+    if (user.hasPermission) {
+      // Do something
+    }
+  }
+}
+
+// ✅ Early returns
+if (!user) return;
+if (!user.isActive) return;
+if (!user.hasPermission) return;
+
+// Do something
+
+// ❌ Flag parameters
+function processUser(user: User, isAdmin: boolean) {
+  if (isAdmin) {
+    // Admin logic
+  } else {
+    // Regular user logic
+  }
+}
+
+// ✅ Separate functions
+function processAdminUser(user: User) {
+  // Admin logic
+}
+
+function processRegularUser(user: User) {
+  // Regular user logic
+}
+```
+
+## Code Review Checklist
+
+### Before Committing
+- [ ] Function has single responsibility
+- [ ] Variables have descriptive names
+- [ ] No magic numbers or strings
+- [ ] Error handling is explicit
+- [ ] No commented-out code
+- [ ] No TODO comments (use issues instead)
+- [ ] Functions are under 30 lines
+- [ ] File is under 300 lines
+- [ ] No duplication
+- [ ] Early returns used where appropriate

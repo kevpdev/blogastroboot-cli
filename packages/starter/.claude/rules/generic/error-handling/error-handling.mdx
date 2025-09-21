@@ -1,0 +1,372 @@
+---
+description: Comprehensive error handling patterns and best practices
+---
+
+# Error Handling Patterns
+
+## Error Type System
+
+### Core Error Types
+```typescript
+type ErrorType = 'validation' | 'network' | 'content' | 'system' | 'unknown';
+
+interface AppError {
+  type: ErrorType;
+  message: string;
+  details?: string;
+  code?: string;
+  timestamp: Date;
+}
+```
+
+### Custom Error Classes
+```typescript
+class CustomError extends Error {
+  type: ErrorType;
+  details?: string;
+  code?: string;
+  timestamp: Date;
+
+  constructor(type: ErrorType, message: string, details?: string, code?: string) {
+    super(message);
+    this.type = type;
+    this.details = details;
+    this.code = code;
+    this.timestamp = new Date();
+    this.name = 'CustomError';
+  }
+
+  toJSON(): AppError {
+    return {
+      type: this.type,
+      message: this.message,
+      details: this.details,
+      code: this.code,
+      timestamp: this.timestamp
+    };
+  }
+}
+```
+
+## Error Creation & Handling
+
+### Factory Functions
+```typescript
+export function createError(type: ErrorType, message: string, details?: string, code?: string): CustomError {
+  return new CustomError(type, message, details, code);
+}
+
+export function handleError(error: unknown): AppError {
+  if (error instanceof CustomError) {
+    return error.toJSON();
+  }
+
+  if (error instanceof Error) {
+    return {
+      type: 'unknown',
+      message: error.message,
+      details: error.stack,
+      timestamp: new Date()
+    };
+  }
+
+  return {
+    type: 'unknown',
+    message: 'Une erreur inattendue s\'est produite',
+    details: String(error),
+    timestamp: new Date()
+  };
+}
+```
+
+### Centralized Logging
+```typescript
+export function logError(error: AppError, context?: string): void {
+  const logData = {
+    ...error,
+    context,
+    userAgent: typeof globalThis.navigator !== 'undefined' ? globalThis.navigator.userAgent : 'server',
+    url: typeof globalThis.window !== 'undefined' ? globalThis.window.location.href : 'unknown'
+  };
+
+  globalThis.console.error('[ErrorHandler]', logData);
+
+  // En production, on pourrait envoyer les erreurs à un service de monitoring
+  if (typeof globalThis.window !== 'undefined' && import.meta.env.PROD) {
+    // Exemple d'envoi vers un service de monitoring
+    // sendToMonitoring(logData);
+  }
+}
+```
+
+## Validation Patterns
+
+### Input Validation
+```typescript
+export function validateRequired<T>(value: T | null | undefined, fieldName: string): T {
+  if (value === null || value === undefined) {
+    throw createError('validation', `Le champ ${fieldName} est requis`, `Field: ${fieldName}`);
+  }
+  return value;
+}
+
+export function validateString(value: unknown, fieldName: string, minLength = 0, maxLength = Infinity): string {
+  if (typeof value !== 'string') {
+    throw createError('validation', `${fieldName} doit être une chaîne de caractères`, `Type: ${typeof value}`);
+  }
+
+  if (value.length < minLength) {
+    throw createError('validation', `${fieldName} doit contenir au moins ${minLength} caractères`, `Length: ${value.length}`);
+  }
+
+  if (value.length > maxLength) {
+    throw createError('validation', `${fieldName} doit contenir au maximum ${maxLength} caractères`, `Length: ${value.length}`);
+  }
+
+  return value;
+}
+
+export function validateArray<T>(value: unknown, fieldName: string): T[] {
+  if (!Array.isArray(value)) {
+    throw createError('validation', `${fieldName} doit être un tableau`, `Type: ${typeof value}`);
+  }
+  return value as T[];
+}
+```
+
+## Safe Execution Patterns
+
+### Error-Safe Functions
+```typescript
+export function safeExecute<T>(
+  fn: () => T | Promise<T>,
+  fallback: T,
+  context?: string
+): T | Promise<T> {
+  try {
+    const result = fn();
+    if (result instanceof Promise) {
+      return result.catch((error) => {
+        const appError = handleError(error);
+        logError(appError, context);
+        return fallback;
+      });
+    }
+    return result;
+  } catch (error) {
+    const appError = handleError(error);
+    logError(appError, context);
+    return fallback;
+  }
+}
+```
+
+### Retry Logic
+```typescript
+export async function withRetry<T>(
+  fn: () => Promise<T>,
+  maxRetries = 3,
+  delay = 1000,
+  context?: string
+): Promise<T> {
+  let lastError: unknown;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      const appError = handleError(error);
+
+      if (attempt === maxRetries) {
+        logError(appError, `${context} - Final attempt failed`);
+        throw error;
+      }
+
+      logError(appError, `${context} - Attempt ${attempt}/${maxRetries} failed, retrying...`);
+
+      // Délai avant la prochaine tentative
+      await new Promise(resolve => globalThis.setTimeout(resolve, delay * attempt));
+    }
+  }
+
+  throw lastError;
+}
+```
+
+## Frontend Error Handling
+
+### Page-Level Error Handling
+```astro
+---
+// src/pages/blog/tag/[tag].astro
+import { validateRequired, validateString, handleError, logError, createError } from '../../../utils/error-handler';
+
+const { tag } = Astro.params;
+const { originalTag } = Astro.props;
+
+let posts: any[] = [];
+let hasError = false;
+let errorMessage = '';
+
+try {
+  validateRequired(tag, 'tag');
+  validateRequired(originalTag, 'originalTag');
+  validateString(tag, 'tag', 1, 100);
+  validateString(originalTag, 'originalTag', 1, 100);
+
+  posts = await getPostsByTag(originalTag);
+} catch (error) {
+  hasError = true;
+  const appError = handleError(error);
+  logError(appError, `Tag page: ${tag}`);
+  errorMessage = appError.message;
+
+  // En cas d'erreur, rediriger vers 404
+  if (appError.type === 'validation') {
+    return Astro.redirect('/404');
+  }
+}
+---
+
+{hasError ? (
+  <ErrorMessage
+    title="Erreur lors du chargement"
+    message={errorMessage}
+    type="error"
+  />
+) : (
+  <!-- Contenu normal -->
+)}
+```
+
+### Component-Level Error Boundaries
+```astro
+---
+// src/components/ui/ErrorBoundary.astro
+export interface Props {
+  fallback?: string;
+  showError?: boolean;
+  class?: string;
+}
+
+const {
+  fallback = 'Une erreur est survenue lors du chargement de ce contenu.',
+  showError = false,
+  class: className = ''
+} = Astro.props;
+
+let hasError = false;
+let errorMessage = '';
+
+try {
+  // Le slot sera rendu ici
+} catch (error) {
+  hasError = true;
+  errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+  globalThis.console.error('ErrorBoundary caught error:', error);
+}
+---
+
+{hasError ? (
+  <div class={`error-boundary p-4 border border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800 rounded-lg ${className}`}>
+    <!-- Error display with fallback UI -->
+  </div>
+) : (
+  <slot />
+)}
+```
+
+## Testing Error Scenarios
+
+### Unit Tests for Error Handling
+```typescript
+// src/utils/error-handler.test.ts
+import { describe, test, expect, vi } from 'vitest';
+import { CustomError, createError, handleError, validateRequired } from './error-handler';
+
+describe('error-handler', () => {
+  test('should create CustomError with all properties', () => {
+    const error = new CustomError('validation', 'Test error', 'Details', 'CODE123');
+
+    expect(error.type).toBe('validation');
+    expect(error.message).toBe('Test error');
+    expect(error.details).toBe('Details');
+    expect(error.code).toBe('CODE123');
+    expect(error.timestamp).toBeInstanceOf(Date);
+  });
+
+  test('should validate required values', () => {
+    expect(validateRequired('test', 'field')).toBe('test');
+    expect(() => validateRequired(null, 'testField')).toThrow('Le champ testField est requis');
+  });
+});
+```
+
+### Integration Tests
+```typescript
+// Test error pages and components
+describe('Error Pages', () => {
+  test('should render 404 page', async () => {
+    const container = await AstroContainer.create();
+    const result = await container.renderToString(NotFound);
+
+    expect(result).toContain('Page non trouvée');
+    expect(result).toContain('404');
+  });
+});
+```
+
+## Production Monitoring
+
+### Error Tracking Setup
+```typescript
+// src/utils/monitoring.ts (example)
+interface MonitoringService {
+  captureError(error: AppError, context?: string): void;
+  captureMessage(message: string, level: 'info' | 'warning' | 'error'): void;
+}
+
+class SentryMonitoring implements MonitoringService {
+  captureError(error: AppError, context?: string): void {
+    // Sentry.captureException(error, { extra: { context } });
+  }
+
+  captureMessage(message: string, level: 'info' | 'warning' | 'error'): void {
+    // Sentry.captureMessage(message, level);
+  }
+}
+
+// En production
+if (import.meta.env.PROD) {
+  const monitoring = new SentryMonitoring();
+  // Integration avec logError()
+}
+```
+
+## Error Handling Checklist
+
+### Development
+- [ ] All user inputs are validated
+- [ ] External API calls are wrapped in try-catch
+- [ ] Database operations have error handling
+- [ ] File operations are protected
+- [ ] Network requests have timeout and retry logic
+
+### User Experience
+- [ ] Error messages are user-friendly (not technical)
+- [ ] Fallback UI is provided for failed components
+- [ ] Navigation alternatives are available on error pages
+- [ ] Loading states prevent multiple submissions
+
+### Monitoring & Debugging
+- [ ] Errors are logged with sufficient context
+- [ ] Error tracking is configured for production
+- [ ] Performance impact of error handling is minimal
+- [ ] Error rates and patterns are monitored
+
+### Security
+- [ ] Sensitive information is never exposed in error messages
+- [ ] Error responses don't leak system information
+- [ ] Input validation prevents injection attacks
+- [ ] Error logs don't contain sensitive data

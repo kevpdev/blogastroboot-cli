@@ -1,0 +1,80 @@
+# Template — Composant Astro
+
+Template standardisé pour créer des composants Astro réutilisables et optimisés.
+
+## Structure
+
+```astro
+---
+interface Props {
+  title: string;
+  variant?: 'primary' | 'secondary' | 'outline';
+  size?: 'sm' | 'md' | 'lg';
+  className?: string;
+}
+
+const {
+  title,
+  variant = 'primary',
+  size = 'md',
+  className = ''
+} = Astro.props;
+---
+
+<div class={`component component--${variant} component--${size} ${className}`}>
+  <header class="component__header">
+    <h2 class="heading-lg text-[rgb(var(--text-primary))]">{title}</h2>
+  </header>
+  <div class="component__content">
+    <slot />
+  </div>
+  <footer class="component__footer">
+    <slot name="footer" />
+  </footer>
+</div>
+
+<style>
+  .component {
+    /* Use design tokens */
+    background: rgb(var(--bg-primary));
+    border: 1px solid rgb(var(--border-primary) / 0.6);
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
+  }
+
+  .component--sm { padding: 1rem; }
+  .component--md { padding: 1.5rem; }
+  .component--lg { padding: 2rem; }
+
+  .component--primary {
+    border-color: rgb(var(--brand-primary) / 0.2);
+  }
+
+  .component--secondary {
+    background: rgb(var(--bg-secondary));
+  }
+
+  /* Mobile-first responsive */
+  @media (min-width: 768px) {
+    .component--lg { padding: 2.5rem; }
+  }
+</style>
+```
+
+## Conventions
+
+- **Interface Props** : Toujours définir une interface TypeScript
+- **Props par défaut** : Utiliser la déstructuration avec valeurs par défaut
+- **Classes CSS** : Utiliser BEM ou pattern cohérent
+- **Design tokens** : Utiliser les variables CSS avec format RGB
+- **Slots** : Prévoir slot principal + slots nommés si nécessaire
+- **Responsive** : Mobile-first avec breakpoints Tailwind
+
+## Checklist qualité
+
+- [ ] Interface TypeScript définie
+- [ ] Props avec valeurs par défaut
+- [ ] Design tokens utilisés (pas de couleurs hardcodées)
+- [ ] Responsive mobile-first
+- [ ] Accessible (ARIA, semantic HTML)
+- [ ] Slots appropriés pour flexibilité

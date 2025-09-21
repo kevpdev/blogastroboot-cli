@@ -1,0 +1,143 @@
+---
+description: Essential project architecture and stack overview
+alwaysApply: true
+---
+
+# Project Overview
+
+## Architecture
+
+This is a modern Astro blog with TypeScript strict configuration, following component-based architecture with design tokens and mobile-first responsive design.
+
+### Tech Stack
+
+**Core Framework**:
+- **Astro 5.13.3** with TypeScript strict mode and null checks
+- **Tailwind CSS 4.1.13** with Vite plugin for performance
+- **Vitest** for unit testing with @testing-library/dom
+- **ESLint** flat config with TypeScript support
+- **Husky + lint-staged** for pre-commit quality control
+
+**Package Manager**: pnpm with Node.js 24+ support
+
+### Project Structure
+
+```
+src/
+├── components/
+│   ├── layout/          # Header, Footer, Navigation
+│   │   ├── FooterNew.astro
+│   │   ├── Header.astro
+│   │   └── Navigation.astro
+│   └── ui/              # Reusable UI components
+│       ├── Badge.astro
+│       ├── BaseHead.astro
+│       ├── Button.astro
+│       ├── ErrorBoundary.astro
+│       └── ErrorMessage.astro
+├── layouts/             # Page layout templates
+│   ├── BaseLayout.astro      # Core HTML structure
+│   ├── BlogLayout.astro      # Blog posts with metadata
+│   ├── BlogListLayout.astro  # Blog listing
+│   ├── FormationsLayout.astro
+│   ├── HomeLayout.astro      # Homepage specific
+│   └── PageLayout.astro      # Static content pages
+├── pages/               # File-based routing
+│   ├── 404.astro            # Error page
+│   ├── 500.astro            # Server error page
+│   ├── about.astro
+│   ├── contact.astro
+│   ├── index.astro
+│   ├── blog/
+│   │   ├── index.astro      # Blog listing
+│   │   ├── [...slug].astro  # Individual blog posts
+│   │   └── tag/[tag].astro  # Tag filtering
+│   ├── [...slug].astro      # Dynamic pages from content
+│   └── rss.xml.js           # RSS feed generation
+├── content/             # Blog posts and pages (Markdown)
+│   ├── blog/            # Blog posts
+│   └── pages/           # Static pages
+├── styles/              # CSS and design tokens
+│   ├── tailwind.css     # @tailwind imports + @layer
+│   ├── design-tokens.css # CSS variables in RGB format
+│   └── prose.css        # Typography customization
+├── utils/               # Utility functions
+│   ├── error-handler.ts # Error handling system
+│   ├── tags.ts          # Tag utilities
+│   ├── theme.ts         # Theme management
+│   └── related-posts.ts # Related posts logic
+└── config/              # Configuration files
+```
+
+### Routing System
+
+**Static Routes**:
+- `/` - Homepage (index.astro)
+- `/about` - About page
+- `/contact` - Contact page
+- `/blog` - Blog listing page
+- `/404` - Not found page
+- `/500` - Server error page
+
+**Dynamic Routes**:
+- `/blog/[...slug]` - Individual blog posts
+- `/blog/tag/[tag]` - Posts filtered by tag
+- `/[...slug]` - Content collection pages
+
+**API Routes**:
+- `/rss.xml` - RSS feed generation
+
+### Layout Hierarchy
+
+```
+BaseLayout.astro (Core HTML structure)
+├── HomeLayout.astro (Homepage specific)
+├── BlogLayout.astro (Blog posts with hero, metadata, tags)
+├── BlogListLayout.astro (Blog listing)
+├── FormationsLayout.astro (Formations specific)
+└── PageLayout.astro (Static content pages)
+```
+
+### Component Categories
+
+```
+src/components/
+├── ui/                 # Pure UI components
+│   ├── Button.astro    # Button variants
+│   ├── Badge.astro     # Status badges
+│   ├── ErrorBoundary.astro # Error handling wrapper
+│   └── ErrorMessage.astro  # Error display component
+└── layout/             # Layout components
+    ├── Header.astro    # Site header
+    ├── Navigation.astro # Navigation menu
+    └── FooterNew.astro # Site footer
+```
+
+### Key Features
+
+- **Static Site Generation** with Astro
+- **Content Collections** for blog posts and pages
+- **Error Handling System** with custom error types and components
+- **Responsive Design** mobile-first approach
+- **SEO Optimized** with proper meta tags and structured data
+- **Performance** optimized images and assets with WebP/AVIF
+- **Accessibility** WCAG 2.2 AA compliant
+- **Dark Mode** with system preference detection
+- **RSS Feed** auto-generated
+- **Tag System** for content organization
+
+### Core Web Vitals Targets
+
+- **LCP (Largest Contentful Paint)**: < 2.5s
+- **FID (First Input Delay)**: < 100ms
+- **CLS (Cumulative Layout Shift)**: < 0.1
+
+### Architecture Principles
+
+- **Component-Based**: Reusable, configurable components
+- **Mobile-First**: Progressive enhancement from mobile to desktop
+- **Design System**: Centralized tokens for consistency
+- **Semantic HTML**: Proper markup with accessibility in mind
+- **Error-Safe**: Comprehensive error handling and fallbacks
+- **Performance-First**: Optimized for Core Web Vitals
+- **TypeScript Strict**: Full type safety with null checks

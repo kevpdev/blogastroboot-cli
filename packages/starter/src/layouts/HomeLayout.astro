@@ -1,0 +1,88 @@
+---
+import { getCollection } from 'astro:content';
+import Container from '../components/ui/Container.astro';
+import PostCard from '../components/ui/PostCard.astro';
+import SocialLinks from '../components/layout/SocialLinks.astro';
+import { socialLinksConfig } from '../config/social';
+import { getPopularTags } from '../utils/tags';
+import BaseLayout from './BaseLayout.astro';
+
+export interface Props {
+  title: string;
+  description: string;
+}
+
+const { title, description } = Astro.props;
+
+// Get recent blog posts
+const posts = (await getCollection('blog'))
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+  .slice(0, 6);
+
+// Popular tags basés sur les vrais articles
+const popularTags = await getPopularTags(5);
+---
+
+<BaseLayout
+  title={title}
+  description={description}>
+  <div class="min-h-screen bg-[rgb(var(--bg-secondary))]">
+    <!-- Hero Section -->
+    <section class="bg-[rgb(var(--bg-primary))] border-b border-[rgb(var(--border-primary))]">
+      <Container>
+        <div class="py-16 text-center">
+          <h1 class="text-4xl md:text-5xl font-bold text-[rgb(var(--text-primary))] mb-4">
+            Welcome to My Astro Blog
+          </h1>
+          <p class="text-lg text-[rgb(var(--text-secondary))] max-w-2xl mx-auto">
+            A place for thoughts, web development, space, and everything and between
+          </p>
+        </div>
+      </Container>
+    </section>
+
+    <!-- Main Content -->
+    <Container size="xl">
+      <div class="py-12">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          <!-- Main Content -->
+          <main class="lg:col-span-3">
+            <div class="mb-8">
+              <h2 class="text-2xl font-bold text-[rgb(var(--text-primary))] mb-6">Recent Posts</h2>
+              <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {posts.map((post) => <PostCard post={post} />)}
+              </div>
+            </div>
+          </main>
+
+          <!-- Sidebar -->
+          <aside class="lg:col-span-1 space-y-8">
+            <!-- Popular Tags -->
+            <div class="bg-[rgb(var(--bg-primary))] rounded-lg p-6 shadow-sm border border-[rgb(var(--border-primary))]">
+              <h3 class="text-lg font-semibold text-[rgb(var(--text-primary))] mb-4">Popular Tags</h3>
+              <div class="flex flex-wrap gap-2">
+                {
+                  popularTags.map((tag) => (
+                    <a 
+                      href={`/blog/tag/${tag.slug}`}
+                      class="inline-flex items-center gap-1 px-3 py-1 bg-[rgb(var(--bg-muted))] hover:bg-[rgb(var(--brand-primary))] hover:text-[rgb(var(--text-inverse))] text-[rgb(var(--text-secondary))] rounded-md text-sm transition-colors duration-200 no-underline"
+                    >
+                      {tag.name}
+                      <span class="text-xs opacity-75">({tag.count})</span>
+                    </a>
+                  ))
+                }
+              </div>
+            </div>
+
+            <!-- Follow Me -->
+            <div class="bg-[rgb(var(--bg-primary))] rounded-lg p-6 shadow-sm border border-[rgb(var(--border-primary))]">
+              <h3 class="text-lg font-semibold text-[rgb(var(--text-primary))] mb-4">Follow Me</h3>
+              <SocialLinks links={socialLinksConfig} />
+            </div>
+          </aside>
+        </div>
+      </div>
+    </Container>
+  </div>
+</BaseLayout>

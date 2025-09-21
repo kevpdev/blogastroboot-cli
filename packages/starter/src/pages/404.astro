@@ -1,0 +1,74 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Container from '../components/ui/Container.astro';
+import Section from '../components/ui/Section.astro';
+import Button from '../components/ui/Button.astro';
+
+const title = 'Page non trouvée - 404';
+const description = 'La page que vous cherchez n\'existe pas ou a été déplacée.';
+---
+
+<BaseLayout
+  title={title}
+  description={description}
+>
+  <Section class="py-16 md:py-24">
+    <Container size="md" class="text-center">
+      <div class="mb-8">
+        <h1 class="text-6xl md:text-8xl font-bold text-[rgb(var(--brand-primary))] mb-4">
+          404
+        </h1>
+        <h2 class="text-2xl md:text-3xl font-semibold mb-4 text-[rgb(var(--text-primary))]">
+          Page non trouvée
+        </h2>
+        <p class="text-lg text-[rgb(var(--text-secondary))] mb-8 max-w-md mx-auto">
+          La page que vous cherchez n'existe pas ou a été déplacée. Vérifiez l'URL ou retournez à l'accueil.
+        </p>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+        <Button
+          href="/"
+          variant="primary"
+          size="lg"
+        >
+          Retour à l'accueil
+        </Button>
+
+        <Button
+          href="/blog"
+          variant="secondary"
+          size="lg"
+        >
+          Voir le blog
+        </Button>
+      </div>
+
+      <div class="mt-12 pt-8 border-t border-[rgb(var(--border-primary))]">
+        <h3 class="text-lg font-medium mb-4 text-[rgb(var(--text-primary))]">
+          Vous cherchez quelque chose de spécifique ?
+        </h3>
+        <nav class="flex flex-wrap gap-4 justify-center">
+          <a
+            href="/about"
+            class="text-[rgb(var(--brand-primary))] hover:text-[rgb(var(--brand-primary-hover))] transition-colors no-underline"
+          >
+            À propos
+          </a>
+          <a
+            href="/contact"
+            class="text-[rgb(var(--brand-primary))] hover:text-[rgb(var(--brand-primary-hover))] transition-colors no-underline"
+          >
+            Contact
+          </a>
+          <a
+            href="/meilleures-formations-seo-business"
+            class="text-[rgb(var(--brand-primary))] hover:text-[rgb(var(--brand-primary-hover))] transition-colors no-underline"
+          >
+            Formations SEO
+          </a>
+        </nav>
+      </div>
+    </Container>
+  </Section>
+</BaseLayout>

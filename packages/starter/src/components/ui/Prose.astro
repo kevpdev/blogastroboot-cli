@@ -1,0 +1,27 @@
+---
+export interface Props {
+  class?: string;
+  size?: 'sm' | 'md' | 'lg';
+  as?: keyof HTMLElementTagNameMap;
+}
+
+const { 
+  class: className = '',
+  size = 'md' as const,
+  as: Tag = 'div',
+  ...props 
+} = Astro.props;
+
+const sizeClasses = {
+  sm: 'prose-sm',
+  md: 'prose',
+  lg: 'prose-lg'
+} as const;
+---
+
+<Tag 
+  class={`prose max-w-none ${sizeClasses[size as keyof typeof sizeClasses]} ${className}`}
+  {...props}
+>
+  <slot />
+</Tag>

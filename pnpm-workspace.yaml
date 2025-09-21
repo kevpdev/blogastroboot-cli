@@ -1,0 +1,6 @@
+packages:
+  - packages/cli
+  - packages/starter
+
+overrides:
+  cli: link:../../../../Users/nivek/AppData/Local/pnpm/bin/global/5/node_modules/@blogastroboot/cli

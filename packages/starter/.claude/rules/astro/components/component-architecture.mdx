@@ -1,0 +1,58 @@
+---
+description: Component architecture rules - References core architecture patterns
+alwaysApply: true
+---
+
+# Component Architecture
+
+## Quick Reference
+
+**🏗️ Detailed architecture**: `.claude/rules/00-architecture/1-astro-architecture-patterns.mdx`  
+**📋 Component templates**: `.claude/core/config-templates.mdx`
+
+## Architecture Rules
+
+### Component Organization
+```
+src/components/
+├── ui/         # Pure UI components (no business logic)
+└── layout/     # Layout and structural components
+```
+
+### Component Standards
+- **UI components**: Props interface, TypeScript strict, scoped styles
+- **Layout components**: Composable design, slot-based content
+- **Smart/dumb pattern**: Logic in parent, display in child
+
+### Design System Integration
+- Use design tokens from `src/styles/design-tokens.css`
+- Mobile-first responsive design
+- Consistent spacing and typography scale
+
+### Performance Rules
+- Static generation preferred over SSR
+- Selective hydration with `client:` directives
+- Image optimization with `<Image>` component
+
+## Component Checklist
+
+- [ ] Props interface defined with TypeScript
+- [ ] Responsive design implemented
+- [ ] Scoped styles used
+- [ ] Semantic HTML structure
+- [ ] Accessibility attributes included
+- [ ] Design tokens used for consistency
+
+## Quick Commands
+
+```bash
+# Generate new component
+mkdir src/components/ui/NewComponent
+touch src/components/ui/NewComponent.astro
+
+# Test component integration
+pnpm dev
+pnpm build
+```
+
+For detailed patterns, templates, and implementation examples, see the core architecture documentation.

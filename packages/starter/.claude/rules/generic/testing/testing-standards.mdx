@@ -1,0 +1,308 @@
+---
+description: Testing organization, coverage targets, and quality standards
+---
+
+# Testing Standards
+
+## Organization
+
+### Test File Structure
+- Organize test files by feature or component
+- Use `.test.ts` or `.spec.ts` suffix
+- Group related tests using `describe` blocks
+- Follow Arrange-Act-Assert (AAA) pattern
+
+### Directory Structure
+```
+src/
+├── components/
+│   ├── ui/
+│   │   ├── Button.astro
+│   │   └── Button.test.ts
+├── utils/
+│   ├── error-handler.ts
+│   └── error-handler.test.ts
+└── __tests__/
+    ├── helpers/
+    │   └── test-helpers.ts
+    └── mocks/
+        └── astro-content.ts
+```
+
+## Test Quality
+
+### Naming Conventions
+```typescript
+// ✅ Good: Descriptive test names in English
+describe('UserService', () => {
+  describe('createUser', () => {
+    test('should create user with valid data', () => {
+      // Test implementation
+    });
+
+    test('should throw validation error for invalid email', () => {
+      // Test implementation
+    });
+
+    test('should handle duplicate email gracefully', () => {
+      // Test implementation
+    });
+  });
+});
+
+// ❌ Bad: Vague test names
+describe('UserService', () => {
+  test('test1', () => {
+    // What does this test?
+  });
+
+  test('creates user', () => {
+    // Too vague
+  });
+});
+```
+
+### AAA Pattern
+```typescript
+// ✅ Good: Clear Arrange-Act-Assert structure
+test('should calculate total price with tax', () => {
+  // Arrange
+  const price = 100;
+  const taxRate = 0.08;
+  const expected = 108;
+
+  // Act
+  const result = calculateTotalWithTax(price, taxRate);
+
+  // Assert
+  expect(result).toBe(expected);
+});
+
+// ✅ Complex example with setup
+test('should update user profile successfully', async () => {
+  // Arrange
+  const userId = 'user-123';
+  const updateData = { name: 'John Doe', email: 'john@example.com' };
+  const mockUser = { id: userId, ...updateData };
+
+  vi.mocked(userRepository.findById).mockResolvedValue(mockUser);
+  vi.mocked(userRepository.update).mockResolvedValue(mockUser);
+
+  // Act
+  const result = await userService.updateProfile(userId, updateData);
+
+  // Assert
+  expect(result).toEqual(mockUser);
+  expect(userRepository.update).toHaveBeenCalledWith(userId, updateData);
+});
+```
+
+## Coverage Targets
+
+### Minimum Coverage Requirements
+- **Unit tests**: >80% coverage
+- **Integration tests**: Critical paths covered
+- **E2E tests**: User workflows covered
+
+### What to Test
+```typescript
+// ✅ Test business logic
+function calculateDiscount(price: number, membershipLevel: string): number {
+  // This logic should be tested
+}
+
+// ✅ Test error conditions
+function validateUser(user: unknown): User {
+  // Test validation logic and error cases
+}
+
+// ✅ Test edge cases
+function processArray(items: unknown[]): ProcessedItem[] {
+  // Test empty array, null items, malformed data
+}
+
+// ❌ Don't test trivial getters/setters
+class User {
+  get name(): string {
+    return this._name; // No need to test
+  }
+}
+```
+
+## Testing Patterns
+
+### Error Testing
+```typescript
+// ✅ Test error scenarios
+describe('error handling', () => {
+  test('should throw CustomError for invalid input', () => {
+    expect(() => validateRequired(null, 'testField'))
+      .toThrow('Le champ testField est requis');
+  });
+
+  test('should handle async errors properly', async () => {
+    const mockFn = vi.fn().mockRejectedValue(new Error('Network error'));
+
+    await expect(withRetry(mockFn, 1, 100))
+      .rejects
+      .toThrow('Network error');
+  });
+});
+```
+
+### Mock Patterns
+```typescript
+// ✅ Good: Focused mocking
+describe('UserService', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test('should fetch user by id', async () => {
+    // Arrange
+    const userId = 'user-123';
+    const mockUser = { id: userId, name: 'John' };
+
+    vi.mocked(userRepository.findById).mockResolvedValue(mockUser);
+
+    // Act
+    const result = await userService.getUser(userId);
+
+    // Assert
+    expect(result).toEqual(mockUser);
+    expect(userRepository.findById).toHaveBeenCalledWith(userId);
+  });
+});
+```
+
+### Component Testing (Astro)
+```typescript
+// ✅ Test Astro components
+import { experimental_AstroContainer as AstroContainer } from 'astro/container';
+import ErrorMessage from './ErrorMessage.astro';
+
+describe('ErrorMessage', () => {
+  test('should render error message with default props', async () => {
+    const container = await AstroContainer.create();
+    const result = await container.renderToString(ErrorMessage, {
+      props: {
+        message: 'Test error message'
+      }
+    });
+
+    expect(result).toContain('Test error message');
+    expect(result).toContain('border-red-200');
+    expect(result).toContain('role="alert"');
+  });
+});
+```
+
+## Test Utilities
+
+### Helper Functions
+```typescript
+// ✅ Create reusable test helpers
+export function getPostAt(posts: CollectionEntry<'blog'>[], index: number): CollectionEntry<'blog'> {
+  const post = posts[index];
+  if (!post) {
+    throw new Error(`Expected post at index ${index}, but got ${posts.length} posts`);
+  }
+  return post;
+}
+
+export function expectLengthAndGetFirst<T>(array: T[], expectedLength: number): T {
+  if (array.length !== expectedLength) {
+    throw new Error(`Expected array length ${expectedLength}, but got ${array.length}`);
+  }
+  const first = array[0];
+  if (!first) {
+    throw new Error('Expected first element to exist');
+  }
+  return first;
+}
+```
+
+### Mock Factories
+```typescript
+// ✅ Create mock factories for complex objects
+export function createMockUser(overrides: Partial<User> = {}): User {
+  return {
+    id: 'user-123',
+    name: 'John Doe',
+    email: 'john@example.com',
+    role: 'user',
+    ...overrides
+  };
+}
+
+export function createMockBlogPost(overrides: Partial<BlogPost> = {}): BlogPost {
+  return {
+    title: 'Test Post',
+    description: 'Test description',
+    pubDate: new Date('2024-01-01'),
+    tags: ['test'],
+    draft: false,
+    ...overrides
+  };
+}
+```
+
+## Test Configuration
+
+### Vitest Setup
+```typescript
+// vitest.config.ts
+export default defineConfig({
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html'],
+      thresholds: {
+        global: {
+          statements: 80,
+          branches: 80,
+          functions: 80,
+          lines: 80
+        }
+      }
+    }
+  }
+});
+```
+
+### Test Environment
+```typescript
+// ✅ Setup test environment properly
+beforeEach(() => {
+  vi.clearAllMocks();
+  // Reset any global state
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+  // Clean up after tests
+});
+```
+
+## Testing Checklist
+
+### Before Writing Tests
+- [ ] Identify the behavior to test (not implementation)
+- [ ] Consider edge cases and error scenarios
+- [ ] Plan test data and mocks needed
+
+### Test Quality
+- [ ] Test names describe the expected behavior
+- [ ] Tests follow AAA pattern
+- [ ] Tests are isolated and independent
+- [ ] Mocks are focused and minimal
+- [ ] Error scenarios are covered
+- [ ] Edge cases are tested
+
+### Coverage
+- [ ] Business logic functions have >80% coverage
+- [ ] Error handling paths are tested
+- [ ] Integration points are covered
+- [ ] Critical user workflows have E2E tests

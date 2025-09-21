@@ -1,0 +1,82 @@
+---
+import { Image } from 'astro:assets';
+import type { CollectionEntry } from 'astro:content';
+import BaseLayout from './BaseLayout.astro';
+import Container from '../components/ui/Container.astro';
+import Section from '../components/ui/Section.astro';
+import PostMeta from '../components/ui/PostMeta.astro';
+import Prose from '../components/ui/Prose.astro';
+import Button from '../components/ui/Button.astro';
+import RelatedPostsSidebar from '../components/ui/RelatedPostsSidebar.astro';
+import { getRelatedPosts } from '../utils/related-posts';
+import { AUTHOR_CONFIG } from '../config/site';
+
+type Props = CollectionEntry<'blog'>['data'] & {
+  currentPost?: CollectionEntry<'blog'>;
+};
+
+const { title, description, pubDate, updatedDate, heroImage, tags, author, currentPost } = Astro.props;
+
+// Obtenir les articles liés si currentPost est fourni
+const relatedPosts = currentPost ? await getRelatedPosts(currentPost, 3) : [];
+---
+
+<BaseLayout title={title} description={description}>
+  <article>
+    {heroImage && (
+      <Section spacing="none" class="bg-neutral-100 dark:bg-neutral-900">
+        <Container size="lg">
+          <div class="aspect-[2/1] md:aspect-[16/9] overflow-hidden rounded-lg">
+            <Image
+              width={1200}
+              height={675}
+              src={heroImage}
+              alt={`Image de l'article: ${title}`}
+              class="w-full h-full object-cover"
+            />
+          </div>
+        </Container>
+      </Section>
+    )}
+
+    <Section spacing="none" class="pt-16">
+      <Container size="xl">
+        <!-- Header de l'article (centré sur toute la largeur) -->
+        <header class="text-center mb-12">
+          <h1 class="text-4xl md:text-5xl font-bold text-[rgb(var(--text-primary))] mb-6">{title}</h1>
+          <PostMeta 
+            date={pubDate}
+            updatedDate={updatedDate}
+            tags={tags}
+            author={author || AUTHOR_CONFIG.name}
+            class="justify-center"
+          />
+        </header>
+
+        <!-- Layout 2 colonnes : contenu + sidebar -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+          <!-- Contenu principal -->
+          <main class="lg:col-span-8">
+            <Prose>
+              <slot />
+            </Prose>
+
+            <!-- Navigation de retour -->
+            <div class="mt-12 mb-8 pt-8 border-t border-neutral-200 dark:border-neutral-700 text-center">
+              <Button href="/blog" variant="outline">
+                ← Retour au blog
+              </Button>
+            </div>
+          </main>
+
+          <!-- Sidebar avec articles liés -->
+          <aside class="lg:col-span-4">
+            <div class="lg:sticky lg:top-8">
+              <RelatedPostsSidebar posts={relatedPosts} />
+            </div>
+          </aside>
+        </div>
+      </Container>
+    </Section>
+  </article>
+</BaseLayout>

@@ -1,0 +1,12 @@
+{
+  "extends": "astro/tsconfigs/strictest",
+  "compilerOptions": {
+    "noUncheckedIndexedAccess": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "exactOptionalPropertyTypes": true,
+    "moduleResolution": "Bundler",
+    "target": "ES2022",
+    "types": ["vite/client"]
+  },
+  "include": ["src", "astro.config.mjs", "env.d.ts"]
+}

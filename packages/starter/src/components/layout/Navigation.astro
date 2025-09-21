@@ -1,0 +1,97 @@
+---
+import { getCollection } from 'astro:content';
+import type { NavigationConfig } from '../../types/navigation';
+import HeaderLink from '../ui/HeaderLink.astro';
+import FormattedSlug from '../ui/FormattedSlug.astro';
+import { handleError, logError } from '../../utils/error-handler';
+
+interface Props {
+  navigation: NavigationConfig;
+}
+
+const { navigation } = Astro.props;
+
+async function buildNavigationWithDynamicChildren(config: NavigationConfig) {
+  const processedNav = [];
+  
+  for (const item of config) {
+    // Skip disabled items
+    if (item.enabled === false) continue;
+    
+    const navItem = { ...item };
+    
+    if ('dynamicChildren' in item && item.dynamicChildren) {
+      const { collection, filter, sort, transform } = item.dynamicChildren;
+      
+      try {
+        const entries = await getCollection(collection);
+        let filteredEntries = filter ? entries.filter(filter) : entries;
+
+        if (sort) {
+          filteredEntries = filteredEntries.sort(sort);
+        }
+
+        navItem.children = transform
+          ? filteredEntries.map(transform)
+          : filteredEntries.map(entry => ({
+              label: entry.data.title || entry.slug,
+              href: `/${collection}/${entry.slug || entry.id}`,
+              enabled: true
+            }));
+
+        // Filter enabled children
+        navItem.children = navItem.children.filter(child => child.enabled !== false);
+      } catch (error) {
+        const appError = handleError(error);
+        logError(appError, `Navigation dynamic children for ${item.label}`);
+        navItem.children = [];
+      }
+    }
+    
+    // Filter static children if they exist
+    if (navItem.children && !('dynamicChildren' in item)) {
+      navItem.children = navItem.children.filter(child => child.enabled !== false);
+    }
+    
+    processedNav.push(navItem);
+  }
+  
+  return processedNav;
+}
+
+const processedNavigation = await buildNavigationWithDynamicChildren(navigation);
+---
+
+<div class="flex flex-col gap-4 md:flex-row md:gap-6">
+  {processedNavigation.map((item) => (
+    item.children && item.children.length > 0 ? (
+      <div class="relative group">
+        <HeaderLink href={item.href}>{item.label}</HeaderLink>
+        <div class="absolute top-full left-0 min-w-48 bg-[rgb(var(--bg-primary))] border border-[rgb(var(--border-primary))] rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 mt-2">
+          {item.children.map((child) => (
+            <a
+              href={child.href}
+              class="block px-4 py-2 text-[rgb(var(--text-primary))] hover:bg-[rgb(var(--bg-muted))] hover:text-[rgb(var(--brand-primary))] no-underline transition-colors first:rounded-t-lg last:rounded-b-lg"
+              target={child.external ? '_blank' : undefined}
+              rel={child.external ? 'noopener noreferrer' : undefined}
+            >
+              {child.label.includes('/') ? (
+                <FormattedSlug slug={child.label} />
+              ) : (
+                child.label
+              )}
+            </a>
+          ))}
+        </div>
+      </div>
+    ) : (
+      <HeaderLink 
+        href={item.href}
+        target={item.external ? '_blank' : undefined}
+        rel={item.external ? 'noopener noreferrer' : undefined}
+      >
+        {item.label}
+      </HeaderLink>
+    )
+  ))}
+</div>

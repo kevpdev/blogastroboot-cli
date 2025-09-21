@@ -1,0 +1,173 @@
+
+---
+description: Apply comprehensive Tailwind CSS v4.1 standards for modern CSS development, using CSS-based configuration, @theme directive, and modern utilities syntax
+globs: "**/*tailwind.css", "**/*.tsx", "**/*.jsx", "**/*.vue", "**/*.svelte", "**/*.astro"
+alwaysApply: true
+---
+
+---
+
+## Configuration générale
+
+- **Utiliser la configuration CSS native** uniquement dans `tailwind.css`, pas de config JS complexe.
+- **Variables CSS** pour thèmes et valeurs :
+  - ✅ `var(--color-red-500)`
+  - ❌ `theme(colors.red.500)`
+- Variables CSS pour media queries :
+  - ✅ `theme(--breakpoint-xl)`
+  - ❌ `theme(screens.xl)`
+
+---
+
+## Déclaration d’utilitaires personnalisés
+
+- Utiliser `@utility` pour les composants réutilisables :
+```
+
+@utility btn {
+border-radius: 0.5rem;
+padding: 0.5rem 1rem;
+background-color: ButtonFace;
+}
+
+```
+
+---
+
+## Variants et sélecteurs
+
+- Appliquer les variantes **de gauche à droite** :
+  - ✅ `*:first:pt-0`
+  - ❌ `first:*:pt-0`
+- Pour les variables arbitraires, utiliser les **parenthèses** :
+  - ✅ `bg-(--brand-color)`
+  - ❌ `bg-[--brand-color]`
+
+---
+
+## Responsive & Hover
+
+- Limiter les styles hover à ceux qui ont un sens : **éviter hover sur fonctions critiques**.
+- Encapsuler dans media query :
+```
+
+@media (hover: hover) {
+/* styles hover ici */
+}
+
+```
+
+---
+
+## Frameworks composants (Vue/Svelte/CSS Modules)
+
+- Importer le thème via :
+```
+
+@reference "../../app.css";
+
+```
+- Préférer l’usage direct des variables CSS plutôt que l’`@apply` :
+```
+
+/* ✅ Preferred */
+h1 { color: var(--text-red-500); }
+/* ❌ Avoid */
+h1 { @apply text-red-500; }
+
+```
+
+---
+
+## Fonctionnalités retirées
+
+- Ne plus utiliser les utilitaires d’opacité dépréciés :
+  - ✅ `bg-black/50`
+  - ❌ `bg-opacity-50`
+- Remplacer les directives `@tailwind` par :
+  - ✅ `@import "tailwindcss"`
+  - ❌ `@tailwind base`
+- Éviter la config JS avancée comme `corePlugins`.
+
+---
+
+## Meilleures pratiques
+
+- Utiliser des fonctionnalités CSS modernes comme `@property` et `color-mix()`.
+- Ajouter des couleurs d’outline pour les transitions sur les boutons :
+```
+
+<button class="outline-cyan-500 transition hover:outline-2">
+
+```
+- Trier les utilitaires par nombre de propriétés.
+- Organiser les styles avec des **couches de cascade CSS**.
+
+---
+
+## Exemple complet d’entrée CSS (src/styles/app.css)
+
+```
+
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@theme {
+--color-brand-500: oklch(0.65 0.12 260);
+--color-fg:        oklch(0.33 0.03 260);
+--color-muted:     oklch(0.63 0.02 260);
+--color-bg:        oklch(0.98 0.01 260);
+--color-surface:   oklch(0.97 0.01 260);
+--color-border:    oklch(0.92 0.01 260);
+
+--font-sans: Atkinson, ui-sans-serif, system-ui, sans-serif;
+--radius-lg: 0.75rem;
+--container-3xl: 64rem;
+}
+
+/* Overrides pour le mode sombre */
+.dark {
+--color-fg:      oklch(0.93 0.02 260);
+--color-muted:   oklch(0.78 0.02 260);
+--color-bg:      oklch(0.18 0.02 260);
+--color-surface: oklch(0.22 0.02 260);
+--color-border:  oklch(0.36 0.02 260);
+}
+
+@utility btn {
+border-radius: 0.5rem;
+padding: 0.5rem 1rem;
+background-color: var(--color-brand-500);
+color: white;
+font-weight: 600;
+transition: background-color 0.3s ease;
+}
+
+@media (hover: hover) {
+.btn:hover {
+background-color: color-mix(in srgb, var(--color-brand-500) 90%, transparent);
+}
+}
+
+```
+
+---
+
+## Exemples pratiques à respecter
+
+- Utiliser uniquement les classes Tailwind extraites, éviter les styles inline.
+- Théming via `.dark` affectant uniquement les variables CSS.
+- Utilisation de `.prose` pour contenus éditoriaux markdown, avec support `dark:prose-invert`.
+- Pas de nesting CSS complexe ni `!important`.
+- Extraction optimisée des classes (répétition ≥ 3).
+
+---
+
+## Migration from v3 to v4
+
+When upgrading from Tailwind CSS v3:
+- Replace `@tailwind base` with `@import "tailwindcss"`
+- Move color configuration from JS config to CSS `@theme` directive
+- Update custom utilities from `@apply` to `@utility` directive
+- Use modern CSS features like `oklch()` and `color-mix()`
+

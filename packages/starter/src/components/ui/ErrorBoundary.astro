@@ -1,0 +1,62 @@
+---
+export interface Props {
+  fallback?: string;
+  showError?: boolean;
+  class?: string;
+}
+
+const {
+  fallback = 'Une erreur est survenue lors du chargement de ce contenu.',
+  showError = false,
+  class: className = ''
+} = Astro.props;
+
+let hasError = false;
+let errorMessage = '';
+
+try {
+  // Le slot sera rendu ici
+} catch (error) {
+  hasError = true;
+  errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+  console.error('ErrorBoundary caught error:', error);
+}
+---
+
+{hasError ? (
+  <div class={`error-boundary p-4 border border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800 rounded-lg ${className}`}>
+    <div class="flex items-start space-x-3">
+      <svg
+        class="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0"
+        fill="currentColor"
+        viewBox="0 0 20 20"
+      >
+        <path
+          fill-rule="evenodd"
+          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+          clip-rule="evenodd"
+        />
+      </svg>
+      <div class="flex-1">
+        <h3 class="text-sm font-medium text-red-800 dark:text-red-200">
+          Erreur de chargement
+        </h3>
+        <p class="mt-1 text-sm text-red-700 dark:text-red-300">
+          {fallback}
+        </p>
+        {showError && errorMessage && (
+          <details class="mt-2">
+            <summary class="text-xs text-red-600 dark:text-red-400 cursor-pointer">
+              Détails techniques
+            </summary>
+            <pre class="mt-1 text-xs text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/40 p-2 rounded overflow-x-auto">
+              {errorMessage}
+            </pre>
+          </details>
+        )}
+      </div>
+    </div>
+  </div>
+) : (
+  <slot />
+)}

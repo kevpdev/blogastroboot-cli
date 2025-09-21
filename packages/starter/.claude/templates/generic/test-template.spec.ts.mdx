@@ -1,0 +1,172 @@
+# Template — Test Unitaire
+
+Template standardisé pour créer des tests unitaires avec Vitest et Testing Library.
+
+## Structure
+
+```typescript
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { render, screen, cleanup, fireEvent } from '@testing-library/dom';
+import { ComponentName } from './ComponentName';
+
+describe('ComponentName', () => {
+  beforeEach(() => {
+    // Setup avant chaque test
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
+  describe('Initialization', () => {
+    it('should render with required props', () => {
+      // Arrange
+      const props = {
+        title: 'Test Title',
+        variant: 'primary' as const
+      };
+
+      // Act
+      render(ComponentName(props));
+
+      // Assert
+      expect(screen.getByText('Test Title')).toBeInTheDocument();
+      expect(screen.getByRole('button')).toHaveClass('component--primary');
+    });
+
+    it('should apply default props when not provided', () => {
+      // Arrange
+      const props = {
+        title: 'Test Title'
+      };
+
+      // Act
+      render(ComponentName(props));
+
+      // Assert
+      expect(screen.getByRole('button')).toHaveClass('component--medium');
+    });
+  });
+
+  describe('User Interactions', () => {
+    it('should handle click events', async () => {
+      // Arrange
+      const handleClick = vi.fn();
+      const props = {
+        title: 'Clickable Button',
+        onClick: handleClick
+      };
+
+      render(ComponentName(props));
+      const button = screen.getByRole('button');
+
+      // Act
+      await fireEvent.click(button);
+
+      // Assert
+      expect(handleClick).toHaveBeenCalledTimes(1);
+    });
+
+    it('should handle keyboard navigation', async () => {
+      // Arrange
+      const props = { title: 'Test Button' };
+      render(ComponentName(props));
+      const button = screen.getByRole('button');
+
+      // Act
+      button.focus();
+      await fireEvent.keyDown(button, { key: 'Enter' });
+
+      // Assert
+      expect(button).toHaveFocus();
+      // Additional assertions for Enter key behavior
+    });
+  });
+
+  describe('Edge Cases', () => {
+    it('should handle empty or invalid props gracefully', () => {
+      // Arrange
+      const props = {
+        title: '',
+        variant: 'invalid' as any
+      };
+
+      // Act & Assert
+      expect(() => render(ComponentName(props))).not.toThrow();
+    });
+
+    it('should handle long text content', () => {
+      // Arrange
+      const longTitle = 'A'.repeat(100);
+      const props = { title: longTitle };
+
+      // Act
+      render(ComponentName(props));
+
+      // Assert
+      expect(screen.getByText(longTitle)).toBeInTheDocument();
+    });
+  });
+
+  describe('Accessibility', () => {
+    it('should have proper ARIA attributes', () => {
+      // Arrange
+      const props = {
+        title: 'Accessible Button',
+        ariaLabel: 'Custom accessible label'
+      };
+
+      // Act
+      render(ComponentName(props));
+
+      // Assert
+      const button = screen.getByRole('button');
+      expect(button).toHaveAttribute('aria-label', 'Custom accessible label');
+    });
+
+    it('should support keyboard navigation', () => {
+      // Arrange
+      const props = { title: 'Keyboard Button' };
+
+      // Act
+      render(ComponentName(props));
+
+      // Assert
+      const button = screen.getByRole('button');
+      expect(button).toHaveAttribute('tabindex', '0');
+    });
+  });
+});
+```
+
+## Conventions de test
+
+### Organisation
+- **describe** pour grouper les tests par fonctionnalité
+- **it** pour les cas de test individuels
+- **Arrange-Act-Assert** pattern obligatoire
+
+### Naming
+- Tests en anglais pour cohérence
+- Noms descriptifs : "should [behavior] when [condition]"
+- Groupes logiques : Initialization, User Interactions, Edge Cases, Accessibility
+
+### Mocking
+- Utiliser `vi.fn()` pour les fonctions mock
+- Nettoyer les mocks dans `afterEach`
+- Mocker les dépendances externes
+
+### Assertions
+- Une assertion principale par test
+- Tester le comportement, pas l'implémentation
+- Couvrir les cas limites et erreurs
+
+## Checklist qualité
+
+- [ ] Tests suivent pattern AAA
+- [ ] Noms descriptifs et en anglais
+- [ ] Couverture des cas principaux
+- [ ] Tests d'accessibilité inclus
+- [ ] Cas limites testés
+- [ ] Mocks nettoyés correctement

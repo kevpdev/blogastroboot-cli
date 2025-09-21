@@ -1,0 +1,77 @@
+---
+import Container from './Container.astro';
+import Button from './Button.astro';
+
+export interface Props {
+  class?: string;
+  title: string;
+  subtitle?: string;
+  backgroundImage?: string;
+  gradient?: boolean;
+  centered?: boolean;
+  actions?: Array<{
+    label: string;
+    href?: string;
+    variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+  }>;
+}
+
+const {
+  class: className = '',
+  title,
+  subtitle,
+  backgroundImage,
+  gradient = false,
+  centered = true,
+  actions = [],
+  ...props
+} = Astro.props;
+
+const backgroundStyles = backgroundImage 
+  ? `background-image: url('${backgroundImage}'); background-size: cover; background-position: center;`
+  : '';
+
+const gradientClass = gradient ? 'bg-gradient-to-br from-primary-500 to-primary-700' : '';
+const textColor = backgroundImage || gradient ? 'text-white' : '';
+---
+
+<section 
+  class={`hero py-16 ${gradientClass} ${textColor} ${className}`}
+  style={backgroundStyles}
+  {...props}
+>
+  {/* Overlay for better text readability */}
+  {(backgroundImage || gradient) && (
+    <div class="absolute inset-0 bg-black/20" aria-hidden="true"></div>
+  )}
+  
+  <Container class="relative z-10">
+    <div class={centered ? 'text-center' : ''}>
+      <h1 class="text-4xl md:text-6xl font-bold text-[rgb(var(--text-primary))] mb-6">
+        {title}
+      </h1>
+      
+      {subtitle && (
+        <p class="text-lg md:text-xl text-[rgb(var(--text-secondary))] mb-8 max-w-2xl mx-auto">
+          {subtitle}
+        </p>
+      )}
+
+      {actions.length > 0 && (
+        <div class="flex flex-wrap gap-4 justify-center">
+          {actions.map((action) => (
+            <Button 
+              href={action.href}
+              variant={action.variant || 'primary'}
+              size="lg"
+            >
+              {action.label}
+            </Button>
+          ))}
+        </div>
+      )}
+
+      <slot />
+    </div>
+  </Container>
+</section>

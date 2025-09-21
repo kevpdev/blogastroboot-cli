@@ -1,0 +1,16 @@
+{
+  "name": "blogastroboot-cli",
+  "private": true,
+  "scripts": {
+    "lint": "eslint .",
+    "test": "vitest",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "eslint": "^9.36.0",
+    "husky": "^9.1.7",
+    "prettier": "^3.6.2",
+    "vitest": "^3.2.4"
+  },
+  "packageManager": "pnpm@10.15.0"
+}

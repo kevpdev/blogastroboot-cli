@@ -1,0 +1,194 @@
+---
+description: Apply Astro-specific testing standards for components, utilities, and content collections using Vitest and @testing-library/dom. Focus on testable TypeScript utilities and mocked Astro APIs.
+globs: src/**/*.test.*, src/**/*.spec.*, src/**/__tests__/*
+alwaysApply: true
+---
+
+# Astro Testing Standards with Vitest
+
+## Core Principles
+
+### Test Priority Order
+1. **TypeScript Utilities** (High Priority) - Pure functions, no Astro dependencies
+2. **Content Logic** (Medium Priority) - Functions using `getCollection()` with mocks
+3. **Component Logic** (Low Priority) - Focus on props/logic, not rendering
+
+### Vitest Configuration
+- Use TypeScript for all test files
+- Configure DOM environment for browser API testing
+- Mock Astro APIs (`astro:content`, `astro:assets`) at module level
+- Use `vi.mock()` for external dependencies
+
+## Testing Patterns
+
+### Utility Functions (src/utils/*)
+```typescript
+// ✅ Test pure functions thoroughly
+describe('slugifyTag', () => {
+  test('converts tag to valid URL slug', () => {
+    expect(slugifyTag('JavaScript & TypeScript')).toBe('javascript-typescript');
+  });
+  
+  test('handles accented characters', () => {
+    expect(slugifyTag('Développement')).toBe('developpement');
+  });
+});
+```
+
+### Content Collections
+```typescript
+// ✅ Mock astro:content at module level
+vi.mock('astro:content', () => ({
+  getCollection: vi.fn()
+}));
+
+const mockGetCollection = vi.mocked(getCollection);
+
+beforeEach(() => {
+  mockGetCollection.mockResolvedValue(mockBlogPosts);
+});
+```
+
+### Theme/Browser APIs
+```typescript
+// ✅ Mock browser APIs properly
+Object.defineProperty(window, 'localStorage', {
+  value: {
+    getItem: vi.fn(),
+    setItem: vi.fn(),
+    removeItem: vi.fn()
+  }
+});
+
+Object.defineProperty(window, 'matchMedia', {
+  value: vi.fn(() => ({
+    matches: false,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn()
+  }))
+});
+```
+
+## Test Structure
+
+### File Organization
+```
+src/
+├── utils/
+│   ├── tags.ts
+│   └── tags.test.ts          # Co-located with source
+├── config/
+│   ├── site.ts
+│   └── site.test.ts
+└── __tests__/
+    ├── mocks/
+    │   ├── astro-content.ts   # Shared mocks
+    │   └── blog-posts.ts      # Mock data
+    └── setup/
+        └── dom.ts             # Test setup
+```
+
+### Test Naming
+- Use descriptive test names explaining behavior
+- Group related tests with `describe()`
+- Use `test()` instead of `it()` for clarity
+
+### AAA Pattern
+```typescript
+test('should return related posts based on shared tags', async () => {
+  // Arrange
+  const currentPost = createMockPost({ tags: ['typescript', 'testing'] });
+  mockGetCollection.mockResolvedValue(mockBlogPosts);
+
+  // Act
+  const relatedPosts = await getRelatedPosts(currentPost, 3);
+
+  // Assert
+  expect(relatedPosts).toHaveLength(2);
+  expect(relatedPosts[0].data.tags).toContain('typescript');
+});
+```
+
+## What to Test
+
+### ✅ High Value Tests
+- **Utility functions**: Tag manipulation, date formatting, slug generation
+- **Content filtering**: Related posts algorithm, tag counting
+- **Configuration validation**: Site config, author config
+- **Theme management**: Local storage, system preference detection
+- **Business logic**: Post filtering, sorting, pagination
+
+### ❌ Low Value Tests
+- **Astro component rendering** - Astro handles this well
+- **Static configuration objects** - Unless they have computed properties
+- **Third-party library behavior** - Trust the library tests
+- **CSS classes and styling** - Use visual regression tests instead
+
+## Mocking Strategy
+
+### Astro APIs
+```typescript
+// Mock astro:content for content collection tests
+vi.mock('astro:content', () => ({
+  getCollection: vi.fn(),
+  defineCollection: vi.fn(),
+  z: vi.fn()
+}));
+
+// Mock astro:assets for image tests  
+vi.mock('astro:assets', () => ({
+  Image: ({ src, alt }: any) => `<img src="${src}" alt="${alt}" />`
+}));
+```
+
+### Browser APIs
+- Mock `localStorage` for theme persistence
+- Mock `matchMedia` for system theme detection
+- Mock `document` methods when testing DOM manipulation
+
+### External Dependencies
+- Mock `sharp` for image processing tests
+- Mock RSS generation libraries
+- Mock any Node.js specific APIs
+
+## Error Handling Tests
+
+### Validate Error Conditions
+```typescript
+test('should handle missing tags gracefully', () => {
+  const postWithoutTags = createMockPost({ tags: undefined });
+  
+  expect(() => getPostsByTag('test')).not.toThrow();
+  expect(getPostsByTag('test')).toEqual([]);
+});
+
+test('should throw meaningful error for invalid theme', () => {
+  expect(() => setTheme('invalid' as ThemeMode))
+    .toThrow('Invalid theme mode');
+});
+```
+
+### Data Validation
+- Test edge cases (empty arrays, null values)
+- Test type coercion (date strings to Date objects)
+- Test malformed data handling
+
+## Performance Considerations
+
+### Efficient Test Data
+- Create minimal mock data for each test
+- Use factory functions for generating test data
+- Avoid over-mocking - only mock what you need
+
+### Test Isolation
+- Clean up mocks between tests with `beforeEach`
+- Reset localStorage and other stateful APIs
+- Use `vi.clearAllMocks()` in setup
+
+---
+
+**Integration with Quality Pipeline**
+- Run tests with `pnpm test` 
+- Include in `pnpm quality` command
+- Enforce minimum coverage thresholds
+- Run tests in CI/CD pipeline

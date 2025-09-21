@@ -1,0 +1,76 @@
+# Template — Page Astro
+
+Template standardisé pour créer des pages Astro avec SEO et performance optimisés.
+
+## Structure
+
+```astro
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+interface Props {
+  title: string;
+  description: string;
+  canonicalURL?: string;
+}
+
+const { title, description, canonicalURL } = Astro.props;
+
+// Données optionnelles
+// const posts = await getCollection('blog');
+---
+
+<BaseLayout
+  title={title}
+  description={description}
+  canonicalURL={canonicalURL}
+>
+  <Fragment slot="head">
+    <!-- Meta tags spécifiques à cette page -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+  </Fragment>
+
+  <main class="container mx-auto px-4 py-8">
+    <header class="mb-8">
+      <h1 class="text-4xl font-bold text-[rgb(var(--text-primary))] mb-4">
+        {title}
+      </h1>
+      <p class="text-lg text-[rgb(var(--text-secondary))] max-w-2xl">
+        {description}
+      </p>
+    </header>
+
+    <section class="prose prose-lg max-w-none">
+      <slot />
+    </section>
+  </main>
+</BaseLayout>
+```
+
+## SEO Checklist
+
+- [ ] Title optimisé (50-60 caractères)
+- [ ] Description meta (140-160 caractères)
+- [ ] URL canonique définie
+- [ ] Open Graph tags
+- [ ] Structure sémantique (h1, main, section)
+- [ ] Schema markup si applicable
+
+## Performance Checklist
+
+- [ ] Images optimisées avec composant Image
+- [ ] CSS critique en ligne si nécessaire
+- [ ] Scripts différés ou async
+- [ ] Fonts préchargées
+- [ ] Lazy loading pour contenu below-the-fold
+
+## Accessibilité Checklist
+
+- [ ] Hiérarchie de titres logique (h1 → h2 → h3)
+- [ ] Contraste couleurs suffisant
+- [ ] Navigation clavier fonctionnelle
+- [ ] ARIA labels si nécessaire
+- [ ] Alt texts pour images informatives

@@ -1,0 +1,38 @@
+---
+import type { SocialLinksConfig } from '../../types/navigation';
+
+interface Props {
+  links: SocialLinksConfig;
+  size?: 'small' | 'medium' | 'large';
+  direction?: 'horizontal' | 'vertical';
+  class?: string;
+}
+
+const { 
+  links, 
+  direction = 'horizontal',
+  class: className = ''
+} = Astro.props;
+
+// Icon sizes are handled inline
+// const sizeMap = {
+//   small: '24',
+//   medium: '32', 
+//   large: '48'
+// };
+// const iconSize = sizeMap[size];
+---
+
+<div class={`flex ${direction === 'horizontal' ? 'gap-3' : 'flex-col gap-2'} ${className}`}>
+  {links.filter((link) => link.enabled !== false).map((link) => (
+    <a
+      href={link.href}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="flex items-center justify-center w-10 h-10 bg-[rgb(var(--bg-muted))] hover:bg-[rgb(var(--brand-primary))] hover:text-[rgb(var(--text-inverse))] rounded-lg transition-colors"
+      aria-label={link.ariaLabel}
+    >
+      <Fragment set:html={link.icon.replace(/width="\d+"/, `width="20"`).replace(/height="\d+"/, `height="20"`)} />
+    </a>
+  ))}
+</div>

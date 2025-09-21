@@ -1,0 +1,42 @@
+---
+export interface Props {
+  class?: string;
+  variant?: 'primary' | 'secondary' | 'success' | 'warning' | 'error';
+  size?: 'sm' | 'md';
+  href?: string;
+}
+
+const { 
+  class: className = '',
+  variant = 'secondary',
+  size = 'md',
+  href,
+  ...props 
+} = Astro.props;
+
+const baseClasses = 'badge';
+
+const variantClasses = {
+  primary: 'badge-primary',
+  secondary: 'badge-secondary', 
+  success: 'badge-success',
+  warning: 'badge-warning',
+  error: 'badge-error'
+};
+
+const sizeClasses = {
+  sm: 'text-xs px-2 py-0.5',
+  md: 'text-sm px-2.5 py-1'
+};
+
+// If href is provided, render as a link
+const Tag = href ? 'a' : 'span';
+const tagProps = href ? { href, ...props } : props;
+---
+
+<Tag 
+  class={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
+  {...tagProps}
+>
+  <slot />
+</Tag>

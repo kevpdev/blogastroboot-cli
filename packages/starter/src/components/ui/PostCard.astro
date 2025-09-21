@@ -1,0 +1,57 @@
+---
+import { Image } from 'astro:assets';
+import FormattedDate from './FormattedDate.astro';
+
+export interface Props {
+  post: any;
+  class?: string;
+}
+
+const { post, class: className = '' } = Astro.props;
+const { title, description, pubDate, heroImage } = post.data;
+---
+
+<article
+  class={`bg-[rgb(var(--bg-primary))] rounded-lg shadow-sm border border-[rgb(var(--border-primary))] overflow-hidden hover:shadow-md transition-all duration-200 ${className}`}>
+  <a
+    href={`/blog/${post.slug}/`}
+    class="block">
+    <div class="relative">
+      {
+        heroImage ? (
+          <Image
+            src={heroImage}
+            alt={`Image de l'article: ${title}`}
+            width={400}
+            height={192}
+            class="w-full h-48 object-cover"
+            loading="lazy"
+          />
+        ) : (
+          <div class="w-full h-48 bg-gradient-to-br from-[rgb(var(--brand-primary))] to-[rgb(var(--brand-secondary))] flex items-center justify-center">
+            <div class="text-white text-4xl font-bold opacity-20">
+              {title.charAt(0).toUpperCase()}
+            </div>
+          </div>
+        )
+      }
+    </div>
+
+    <div class="p-4">
+      <header class="mb-3">
+        <h3
+          class="text-lg font-semibold text-[rgb(var(--text-primary))] hover:text-[rgb(var(--brand-primary))] transition-colors line-clamp-2">
+          {title}
+        </h3>
+      </header>
+
+      <p class="text-[rgb(var(--text-secondary))] text-sm mb-3 line-clamp-3 leading-relaxed">
+        {description}
+      </p>
+
+      <div class="flex items-center justify-between text-xs text-[rgb(var(--text-muted))]">
+        <FormattedDate date={pubDate} />
+      </div>
+    </div>
+  </a>
+</article>

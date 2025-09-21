@@ -1,0 +1,307 @@
+---
+description: Template for creating error pages (404, 500, etc.) in Astro
+---
+
+# Error Page Template
+
+Template for creating consistent error pages with proper UX patterns.
+
+## Basic Error Page Structure
+
+```astro
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Container from '../components/ui/Container.astro';
+import Section from '../components/ui/Section.astro';
+import Button from '../components/ui/Button.astro';
+
+const title = 'Page non trouvée - 404';
+const description = 'La page que vous cherchez n\'existe pas ou a été déplacée.';
+---
+
+<BaseLayout
+  title={title}
+  description={description}
+>
+  <Section class="py-16 md:py-24">
+    <Container size="md" class="text-center">
+      <div class="mb-8">
+        <h1 class="text-6xl md:text-8xl font-bold text-[rgb(var(--brand-primary))] mb-4">
+          404
+        </h1>
+        <h2 class="text-2xl md:text-3xl font-semibold mb-4 text-[rgb(var(--text-primary))]">
+          Page non trouvée
+        </h2>
+        <p class="text-lg text-[rgb(var(--text-secondary))] mb-8 max-w-md mx-auto">
+          La page que vous cherchez n'existe pas ou a été déplacée. Vérifiez l'URL ou retournez à l'accueil.
+        </p>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+        <Button
+          href="/"
+          variant="primary"
+          size="lg"
+        >
+          Retour à l'accueil
+        </Button>
+
+        <Button
+          href="/blog"
+          variant="secondary"
+          size="lg"
+        >
+          Voir le blog
+        </Button>
+      </div>
+
+      <div class="mt-12 pt-8 border-t border-[rgb(var(--border-primary))]">
+        <h3 class="text-lg font-medium mb-4 text-[rgb(var(--text-primary))]">
+          Vous cherchez quelque chose de spécifique ?
+        </h3>
+        <nav class="flex flex-wrap gap-4 justify-center">
+          <a
+            href="/about"
+            class="text-[rgb(var(--brand-primary))] hover:text-[rgb(var(--brand-primary-hover))] transition-colors no-underline"
+          >
+            À propos
+          </a>
+          <a
+            href="/contact"
+            class="text-[rgb(var(--brand-primary))] hover:text-[rgb(var(--brand-primary-hover))] transition-colors no-underline"
+          >
+            Contact
+          </a>
+        </nav>
+      </div>
+    </Container>
+  </Section>
+</BaseLayout>
+```
+
+## Server Error Page (500)
+
+```astro
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Container from '../components/ui/Container.astro';
+import Section from '../components/ui/Section.astro';
+import Button from '../components/ui/Button.astro';
+
+const title = 'Erreur serveur - 500';
+const description = 'Une erreur inattendue s\'est produite sur le serveur.';
+---
+
+<BaseLayout
+  title={title}
+  description={description}
+>
+  <Section class="py-16 md:py-24">
+    <Container size="md" class="text-center">
+      <div class="mb-8">
+        <h1 class="text-6xl md:text-8xl font-bold text-[rgb(var(--error-primary,255,0,0))] mb-4">
+          500
+        </h1>
+        <h2 class="text-2xl md:text-3xl font-semibold mb-4 text-[rgb(var(--text-primary))]">
+          Erreur serveur
+        </h2>
+        <p class="text-lg text-[rgb(var(--text-secondary))] mb-8 max-w-md mx-auto">
+          Une erreur inattendue s'est produite. Nos équipes ont été automatiquement notifiées et travaillent à résoudre le problème.
+        </p>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+        <Button
+          href="/"
+          variant="primary"
+          size="lg"
+        >
+          Retour à l'accueil
+        </Button>
+
+        <Button
+          href="javascript:window.location.reload()"
+          variant="secondary"
+          size="lg"
+        >
+          Réessayer
+        </Button>
+      </div>
+
+      <div class="mt-12 pt-8 border-t border-[rgb(var(--border-primary))]">
+        <h3 class="text-lg font-medium mb-4 text-[rgb(var(--text-primary))]">
+          Le problème persiste ?
+        </h3>
+        <p class="text-[rgb(var(--text-secondary))] mb-4">
+          Si cette erreur continue d'apparaître, vous pouvez :
+        </p>
+        <div class="space-y-2 text-sm text-[rgb(var(--text-secondary))]">
+          <p>• Vider le cache de votre navigateur</p>
+          <p>• Essayer depuis un autre navigateur</p>
+          <p>• Revenir plus tard</p>
+        </div>
+        <div class="mt-6">
+          <a
+            href="/contact"
+            class="text-[rgb(var(--brand-primary))] hover:text-[rgb(var(--brand-primary-hover))] transition-colors no-underline"
+          >
+            Nous contacter pour signaler le problème
+          </a>
+        </div>
+      </div>
+    </Container>
+  </Section>
+</BaseLayout>
+```
+
+## Dynamic Error Page with ErrorMessage Component
+
+```astro
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Container from '../components/ui/Container.astro';
+import Section from '../components/ui/Section.astro';
+import ErrorMessage from '../components/ui/ErrorMessage.astro';
+import { validateRequired, validateString, handleError, logError } from '../utils/error-handler';
+
+export interface Props {
+  errorCode?: string;
+  errorMessage?: string;
+  showDetails?: boolean;
+}
+
+const { errorCode = '404', errorMessage, showDetails = false } = Astro.props;
+
+let title = 'Erreur';
+let description = 'Une erreur est survenue.';
+let displayMessage = errorMessage;
+let hasValidationError = false;
+
+try {
+  validateRequired(errorCode, 'errorCode');
+  validateString(errorCode, 'errorCode', 1, 10);
+
+  // Configuration basée sur le code d'erreur
+  switch (errorCode) {
+    case '404':
+      title = 'Page non trouvée - 404';
+      description = 'La page que vous cherchez n\'existe pas ou a été déplacée.';
+      displayMessage = displayMessage || 'Page introuvable';
+      break;
+    case '500':
+      title = 'Erreur serveur - 500';
+      description = 'Une erreur inattendue s\'est produite sur le serveur.';
+      displayMessage = displayMessage || 'Erreur interne du serveur';
+      break;
+    default:
+      title = `Erreur ${errorCode}`;
+      description = 'Une erreur est survenue lors du traitement de votre demande.';
+      displayMessage = displayMessage || `Erreur ${errorCode}`;
+  }
+} catch (error) {
+  hasValidationError = true;
+  const appError = handleError(error);
+  logError(appError, 'Error page validation');
+
+  title = 'Erreur de configuration';
+  description = 'Une erreur de configuration est survenue.';
+  displayMessage = showDetails ? appError.message : 'Erreur de configuration';
+}
+---
+
+<BaseLayout
+  title={title}
+  description={description}
+>
+  <Section class="py-16 md:py-24">
+    <Container size="md">
+      {hasValidationError ? (
+        <ErrorMessage
+          title="Erreur de configuration"
+          message={displayMessage}
+          type="error"
+          showIcon={true}
+        >
+          <div class="mt-4">
+            <a
+              href="/"
+              class="inline-flex items-center px-4 py-2 bg-[rgb(var(--brand-primary))] text-[rgb(var(--text-inverse))] rounded-lg hover:bg-[rgb(var(--brand-primary-hover))] transition-colors no-underline"
+            >
+              ← Retour à l'accueil
+            </a>
+          </div>
+        </ErrorMessage>
+      ) : (
+        <div class="text-center">
+          <div class="mb-8">
+            <h1 class="text-6xl md:text-8xl font-bold text-[rgb(var(--brand-primary))] mb-4">
+              {errorCode}
+            </h1>
+            <h2 class="text-2xl md:text-3xl font-semibold mb-4 text-[rgb(var(--text-primary))]">
+              {displayMessage}
+            </h2>
+            <p class="text-lg text-[rgb(var(--text-secondary))] mb-8 max-w-md mx-auto">
+              {description}
+            </p>
+          </div>
+
+          <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <a
+              href="/"
+              class="inline-flex items-center px-6 py-3 bg-[rgb(var(--brand-primary))] text-[rgb(var(--text-inverse))] rounded-lg hover:bg-[rgb(var(--brand-primary-hover))] transition-colors no-underline font-medium"
+            >
+              Retour à l'accueil
+            </a>
+
+            <a
+              href="/blog"
+              class="inline-flex items-center px-6 py-3 bg-[rgb(var(--bg-muted))] text-[rgb(var(--text-primary))] rounded-lg hover:bg-[rgb(var(--brand-primary))] hover:text-[rgb(var(--text-inverse))] transition-colors no-underline font-medium"
+            >
+              Voir le blog
+            </a>
+          </div>
+        </div>
+      )}
+    </Container>
+  </Section>
+</BaseLayout>
+```
+
+## Error Page Checklist
+
+### Visual Design
+- [ ] Clear, large error code display
+- [ ] Friendly, non-technical error message
+- [ ] Consistent branding and colors
+- [ ] Responsive layout (mobile-first)
+- [ ] Proper contrast ratios
+
+### Navigation & UX
+- [ ] Primary action: Return to homepage
+- [ ] Secondary actions: Navigate to key sections
+- [ ] Helpful suggestions or links
+- [ ] Search functionality (if applicable)
+- [ ] Breadcrumb trail (if applicable)
+
+### Technical Requirements
+- [ ] Proper HTTP status codes
+- [ ] SEO-friendly meta tags
+- [ ] Accessible markup and ARIA labels
+- [ ] Error logging for debugging
+- [ ] Performance optimized
+
+### Content Guidelines
+- [ ] User-friendly language (avoid technical jargon)
+- [ ] Helpful next steps
+- [ ] Contact information for support
+- [ ] Localized content
+- [ ] Brand tone consistency
+
+### Error Types to Consider
+- **404**: Page not found
+- **500**: Internal server error
+- **403**: Access forbidden
+- **503**: Service unavailable
+- **Network**: Connection issues
+- **Timeout**: Request timeout
+- **Validation**: Form validation errors

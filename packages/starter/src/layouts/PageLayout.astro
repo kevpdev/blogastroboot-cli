@@ -1,0 +1,45 @@
+---
+import { Image } from 'astro:assets';
+import type { CollectionEntry } from 'astro:content';
+import BaseLayout from './BaseLayout.astro';
+import Container from '../components/ui/Container.astro';
+import Section from '../components/ui/Section.astro';
+import Prose from '../components/ui/Prose.astro';
+
+type Props = CollectionEntry<'pages'>['data'];
+
+const { title, description, heroImage } = Astro.props;
+---
+
+<BaseLayout title={title} description={description}>
+  <article>
+    {heroImage && (
+      <Section spacing="none" class="bg-neutral-100 dark:bg-neutral-900">
+        <Container size="lg">
+          <div class="aspect-[2/1] md:aspect-[16/9] overflow-hidden rounded-lg">
+            <Image
+              width={1200}
+              height={675}
+              src={heroImage}
+              alt={`Image de la page: ${title}`}
+              class="w-full h-full object-cover"
+            />
+          </div>
+        </Container>
+      </Section>
+    )}
+
+    <Section>
+      <Container>
+        <header class="text-center mb-12">
+          <h1 class="text-4xl md:text-5xl font-bold text-[rgb(var(--text-primary))] mb-6">{title}</h1>
+          <hr class="w-24 h-1 bg-[rgb(var(--brand-primary))] border-0 rounded mx-auto" />
+        </header>
+
+        <Prose>
+          <slot />
+        </Prose>
+      </Container>
+    </Section>
+  </article>
+</BaseLayout>

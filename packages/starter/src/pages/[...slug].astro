@@ -1,0 +1,29 @@
+---
+import { type CollectionEntry, getCollection, render } from 'astro:content';
+import PageLayout from '../layouts/PageLayout.astro';
+
+export async function getStaticPaths() {
+  const pages = await getCollection('pages');
+  const footerPages = await getCollection('footer');
+  
+  return [
+    ...pages.map((page) => ({
+      params: { slug: page.slug },
+      props: page,
+    })),
+    ...footerPages.map((page) => ({
+      params: { slug: page.slug },
+      props: page,
+    }))
+  ];
+}
+
+type Props = CollectionEntry<'pages'> | CollectionEntry<'footer'>;
+
+const page = Astro.props;
+const { Content } = await render(page);
+---
+
+<PageLayout {...page.data}>
+  <Content />
+</PageLayout>

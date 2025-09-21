@@ -1,0 +1,242 @@
+---
+description: Error handling components and patterns for Astro
+---
+
+# Error Handling Components
+
+## Error Pages Structure
+
+### Basic Error Page Pattern
+```astro
+<!-- src/pages/404.astro -->
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Container from '../components/ui/Container.astro';
+import Section from '../components/ui/Section.astro';
+import Button from '../components/ui/Button.astro';
+
+const title = 'Page non trouvée - 404';
+const description = 'La page que vous cherchez n\'existe pas ou a été déplacée.';
+---
+
+<BaseLayout title={title} description={description}>
+  <Section class="py-16 md:py-24">
+    <Container size="md" class="text-center">
+      <!-- Error content with navigation fallbacks -->
+    </Container>
+  </Section>
+</BaseLayout>
+```
+
+## ErrorBoundary Component
+
+### Component Structure
+```astro
+<!-- src/components/ui/ErrorBoundary.astro -->
+---
+export interface Props {
+  fallback?: string;
+  showError?: boolean;
+  class?: string;
+}
+
+const {
+  fallback = 'Une erreur est survenue lors du chargement de ce contenu.',
+  showError = false,
+  class: className = ''
+} = Astro.props;
+
+let hasError = false;
+let errorMessage = '';
+
+try {
+  // Le slot sera rendu ici
+} catch (error) {
+  hasError = true;
+  errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+  globalThis.console.error('ErrorBoundary caught error:', error);
+}
+---
+
+{hasError ? (
+  <div class={`error-boundary p-4 border border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800 rounded-lg ${className}`}>
+    <!-- Error display with fallback UI -->
+  </div>
+) : (
+  <slot />
+)}
+```
+
+## ErrorMessage Component
+
+### Props Interface
+```typescript
+interface ErrorMessageProps {
+  title?: string;
+  message: string;
+  type?: 'error' | 'warning' | 'info';
+  showIcon?: boolean;
+  dismissible?: boolean;
+  class?: string;
+}
+```
+
+### Usage Examples
+```astro
+<!-- Basic error message -->
+<ErrorMessage
+  message="Une erreur est survenue"
+  type="error"
+/>
+
+<!-- Warning with title -->
+<ErrorMessage
+  title="Attention"
+  message="Cette action ne peut pas être annulée"
+  type="warning"
+  dismissible={true}
+/>
+
+<!-- Info message -->
+<ErrorMessage
+  message="Opération terminée avec succès"
+  type="info"
+  showIcon={true}
+/>
+```
+
+## Error Handling Integration
+
+### Page Level Error Handling
+```astro
+---
+import { validateRequired, validateString, handleError, logError } from '../utils/error-handler';
+
+let hasError = false;
+let errorMessage = '';
+
+try {
+  validateRequired(tag, 'tag');
+  validateString(tag, 'tag', 1, 100);
+
+  // Process data
+} catch (error) {
+  hasError = true;
+  const appError = handleError(error);
+  logError(appError, `Page context`);
+  errorMessage = appError.message;
+
+  if (appError.type === 'validation') {
+    return Astro.redirect('/404');
+  }
+}
+---
+
+{hasError ? (
+  <ErrorMessage
+    title="Erreur lors du chargement"
+    message={errorMessage}
+    type="error"
+  />
+) : (
+  <!-- Normal content -->
+)}
+```
+
+### Component Level Protection
+```astro
+---
+// Wrap risky operations in ErrorBoundary
+import ErrorBoundary from './ErrorBoundary.astro';
+import DynamicContent from './DynamicContent.astro';
+---
+
+<ErrorBoundary fallback="Impossible de charger le contenu dynamique">
+  <DynamicContent />
+</ErrorBoundary>
+```
+
+### Collection Level Handling
+```astro
+---
+import { safeExecute } from '../utils/error-handler';
+
+const posts = await safeExecute(
+  () => getCollection('blog'),
+  [], // fallback empty array
+  'Blog collection loading'
+);
+---
+
+{posts.length > 0 ? (
+  <div class="posts-grid">
+    {posts.map(post => <PostCard post={post} />)}
+  </div>
+) : (
+  <ErrorMessage
+    message="Aucun article disponible pour le moment"
+    type="info"
+  />
+)}
+```
+
+## Error Component Patterns
+
+### Progressive Enhancement
+```astro
+---
+// Start with basic functionality, enhance with JavaScript
+---
+
+<div class="error-message" data-dismissible="true">
+  <p>Message d'erreur</p>
+  <button type="button" data-dismiss="error">×</button>
+</div>
+
+<script>
+  // Enhanced functionality
+  document.querySelectorAll('[data-dismiss="error"]').forEach(button => {
+    button.addEventListener('click', () => {
+      const errorMessage = button.closest('.error-message');
+      errorMessage?.remove();
+    });
+  });
+</script>
+```
+
+### Accessibility Considerations
+```astro
+<div
+  class="error-message"
+  role="alert"
+  aria-live="polite"
+  aria-labelledby="error-title"
+  aria-describedby="error-description"
+>
+  <h3 id="error-title">Erreur</h3>
+  <p id="error-description">Description de l'erreur</p>
+</div>
+```
+
+## Error Integration Checklist
+
+### Component Design
+- [ ] Props interface is well-defined with TypeScript
+- [ ] Fallback UI is provided for all error states
+- [ ] Error messages are user-friendly (not technical)
+- [ ] Accessibility attributes are included (role, aria-*)
+- [ ] Responsive design works on all breakpoints
+
+### Error Handling
+- [ ] Try-catch blocks wrap risky operations
+- [ ] Errors are logged with proper context
+- [ ] User-safe error messages are displayed
+- [ ] Navigation fallbacks are provided
+- [ ] Validation errors redirect appropriately
+
+### Testing
+- [ ] Error scenarios are tested
+- [ ] Component renders correctly with different props
+- [ ] Accessibility is validated
+- [ ] Error boundaries catch exceptions properly
+- [ ] Fallback content is displayed correctly

@@ -1,0 +1,62 @@
+/* 
+ * Design Tokens - Pour Tailwind CSS v3
+ * Simple, focused, maintainable
+ */
+
+:root {
+  /* ===== BRAND COLORS ===== */
+  --brand-primary: 55 65 81; /* rgb(55, 65, 81) */
+  --brand-primary-hover: 31 41 55; /* rgb(31, 41, 55) */
+  --brand-primary-active: 17 24 39; /* rgb(17, 24, 39) */
+  
+  --brand-secondary: 107 114 128; /* rgb(107, 114, 128) */
+  --brand-secondary-hover: 75 85 99; /* rgb(75, 85, 99) */
+  --brand-secondary-active: 55 65 81; /* rgb(55, 65, 81) */
+
+  /* ===== TEXT COLORS ===== */
+  --text-primary: 17 24 39; /* rgb(17, 24, 39) */
+  --text-secondary: 75 85 99; /* rgb(75, 85, 99) */
+  --text-muted: 107 114 128; /* rgb(107, 114, 128) */
+  --text-inverse: 255 255 255; /* rgb(255, 255, 255) */
+
+  /* ===== BACKGROUND COLORS ===== */
+  --bg-primary: 255 255 255; /* rgb(255, 255, 255) */
+  --bg-secondary: 243 244 246; /* rgb(243, 244, 246) */
+  --bg-muted: 229 231 235; /* rgb(229, 231, 235) */
+  --bg-inverse: 17 24 39; /* rgb(17, 24, 39) */
+
+  /* ===== BORDER COLORS ===== */
+  --border-primary: 229 231 235; /* rgb(229, 231, 235) */
+  --border-secondary: 209 213 219; /* rgb(209, 213, 219) */
+  --border-muted: 243 244 246; /* rgb(243, 244, 246) */
+
+  /* ===== STATE COLORS ===== */
+  --success: 5 150 105; /* rgb(5, 150, 105) */
+  --success-light: 236 253 245; /* rgb(236, 253, 245) */
+  --warning: 217 119 6; /* rgb(217, 119, 6) */
+  --warning-light: 255 251 235; /* rgb(255, 251, 235) */
+  --error: 220 38 38; /* rgb(220, 38, 38) */
+  --error-light: 254 242 242; /* rgb(254, 242, 242) */
+  --info: 55 65 81; /* rgb(55, 65, 81) */
+  --info-light: 240 244 255; /* rgb(240, 244, 255) */
+}
+
+/* ===== DARK THEME ===== */
+.dark {
+  --text-primary: 249 250 251; /* rgb(249, 250, 251) */
+  --text-secondary: 209 213 219; /* rgb(209, 213, 219) */
+  --text-muted: 156 163 175; /* rgb(156, 163, 175) */
+  --text-inverse: 17 24 39; /* rgb(17, 24, 39) */
+
+  --bg-primary: 17 24 39; /* rgb(17, 24, 39) */
+  --bg-secondary: 31 41 55; /* rgb(31, 41, 55) */
+  --bg-muted: 55 65 81; /* rgb(55, 65, 81) */
+  --bg-inverse: 249 250 251; /* rgb(249, 250, 251) */
+
+  --border-primary: 55 65 81; /* rgb(55, 65, 81) */
+  --border-secondary: 75 85 99; /* rgb(75, 85, 99) */
+  --border-muted: 31 41 55; /* rgb(31, 41, 55) */
+}
+
+/* ===== SYSTEM THEME PREFERENCE ===== */
+/* Removed automatic dark mode - only use .dark class */

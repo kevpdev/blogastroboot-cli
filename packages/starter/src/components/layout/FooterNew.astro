@@ -1,0 +1,57 @@
+---
+import Container from '../ui/Container.astro';
+import SocialLinks from './SocialLinks.astro';
+import { socialLinksConfig } from '../../config/social';
+
+export interface Props {
+  class?: string;
+}
+
+const { class: className = '', ...props } = Astro.props;
+
+const currentYear = new Date().getFullYear();
+
+// Footer navigation - you can customize these
+const footerLinks = [
+  { href: '/', label: 'Accueil' },
+  { href: '/blog', label: 'Blog' },
+  { href: '/about', label: 'À propos' },
+  { href: '/rss.xml', label: 'RSS' },
+];
+
+// Social links - utilisation de la configuration centralisée
+---
+
+<footer class={`mt-auto bg-neutral-100 dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-800 ${className}`} {...props}>
+  <Container>
+    <div class="section-sm">
+      <div class="text-center space-y-6">
+        <!-- Footer navigation -->
+        <nav aria-label="Navigation du pied de page">
+          <ul class="flex flex-wrap justify-center gap-x-8 gap-y-2">
+            {footerLinks.map((link) => (
+              <li>
+                <a 
+                  href={link.href}
+                  class="text-sm text-neutral-600 dark:text-neutral-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-200"
+                >
+                  {link.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        <!-- Social Links -->
+        <div class="flex justify-center">
+          <SocialLinks links={socialLinksConfig} />
+        </div>
+
+        <!-- Copyright -->
+        <div class="text-sm text-neutral-500 dark:text-neutral-500">
+          <p>© {currentYear} Mon Blog. Tous droits réservés.</p>
+        </div>
+      </div>
+    </div>
+  </Container>
+</footer>

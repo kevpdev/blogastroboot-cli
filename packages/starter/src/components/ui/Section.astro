@@ -1,0 +1,28 @@
+---
+export interface Props {
+  class?: string;
+  spacing?: 'sm' | 'md' | 'lg' | 'none';
+  as?: keyof HTMLElementTagNameMap;
+}
+
+const { 
+  class: className = '',
+  spacing = 'md' as const,
+  as: Tag = 'section',
+  ...props 
+} = Astro.props;
+
+const spacingClasses = {
+  none: '',
+  sm: 'py-8 md:py-12',
+  md: 'py-16',
+  lg: 'py-24 md:py-32'
+} as const;
+---
+
+<Tag 
+  class={`${spacingClasses[spacing as keyof typeof spacingClasses]} ${className}`}
+  {...props}
+>
+  <slot />
+</Tag>
