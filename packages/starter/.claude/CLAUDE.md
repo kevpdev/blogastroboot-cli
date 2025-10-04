@@ -26,8 +26,8 @@ All commands are run from the root of the project using pnpm:
 
 ### Claude Commands
 
-- `/implement-feature [name] [type]` - Structured feature implementation
 - `/create-content [type] [title]` - Content creation workflow
+- `/create-issue [type] [title]` - Generate structured issue templates
 - `/commit-push-smart [message?]` - Smart commit and push
 - `/bootstrap-quality` - Setup quality tools and configs
 - `/debug-issue` - Debug workflow with inputs analysis
@@ -180,6 +180,12 @@ The `.claude/` directory is organized with thematic subfolders for optimal conte
   - `page-template.astro.mdx` - Astro page template
 - **`templates/content/`** - Content templates
   - `blog-post-template.md` - Blog post structure
+- **`templates/issues/`** - Issue templates for structured communication
+  - `README.md` - Usage guide for issue templates
+  - `feature-issue.md` - New feature requests [FEAT]
+  - `bug-fix-issue.md` - Bug reports and fixes [FIX]
+  - `refactor-issue.md` - Code improvements and refactoring [REFACTOR]
+  - `ui-component-issue.md` - UI component specifications
 
 ### **Code Fragments & Configs**
 
@@ -197,11 +203,11 @@ The `.claude/` directory is organized with thematic subfolders for optimal conte
 ### **Operational Commands**
 
 - **`commands/`** - Essential Claude operations (5 max for performance)
-  - `implement-feature.md` - Structured feature development
   - `create-content.md` - Content creation with SEO optimization
   - `commit-push-smart.md` - Smart git operations
   - `bootstrap-quality.md` - Quality tooling setup
   - `debug-issue.md` - Systematic debugging workflow
+  - `create-issue.md` - Generate structured issue templates
 
 ### **Debug & Analysis**
 
@@ -223,13 +229,16 @@ The `.claude/` directory is organized with thematic subfolders for optimal conte
 ### **Command Usage Patterns**
 
 ```bash
-# Feature Development
-/implement-feature search-component component
-# → References: core/astro-patterns.mdx, templates/astro/component-template.astro.mdx
-
 # Content Creation
 /create-content tutorial "Astro Performance Guide"
 # → References: templates/content/blog-post-template.md, snippets/astro/frontmatter-schemas.md
+
+# Issue Templates
+/create-issue feature "Advanced search system"
+/create-issue fix "Mobile navigation broken"
+/create-issue refactor "Performance optimization"
+/create-issue ui "Modern Card component"
+# → References: templates/issues/ for structured communication
 
 # Smart Git Operations
 /commit-push-smart "feat: add search functionality"
@@ -255,6 +264,7 @@ The `.claude/` directory is organized with thematic subfolders for optimal conte
 - **For performance**: Use `rules/generic/performance/` for Core Web Vitals
 - **For security**: Use `rules/generic/security/` for frontend security
 - **For debugging**: Utilize `inputs/` and relevant `snippets/` subfolders
+- **For issue creation**: Use `templates/issues/` for structured communication
 - **Code generation**: Use domain-specific `templates/` subfolders
 
 ### **Performance Optimization**
@@ -275,10 +285,25 @@ The `.claude/` directory is organized with thematic subfolders for optimal conte
 
 **Quality Control Workflow**:
 
+- **ALWAYS run `pnpm quality` after completing any code changes** (includes typecheck + lint + format check)
 - Run `pnpm quality` before committing (enforced by pre-commit hooks)
 - Follow standards defined in `rules/generic/code-quality/`
 - Apply Astro patterns from `rules/astro/`
 - Validate accessibility and performance against targets from `rules/generic/performance/`
+
+**Automatic Feature Implementation Workflow**:
+
+- **Complex features** (components, layouts, integrations): Apply structured 8-step process automatically:
+  1. Analyze requirements and acceptance criteria
+  2. Explore existing architecture and identify similar patterns
+  3. Design technical approach (components, interfaces, data flow)
+  4. Create base structure (files, TypeScript interfaces)
+  5. Implement core functionality with unit tests
+  6. Integrate with existing architecture (layouts, components, styles)
+  7. Validate with comprehensive tests and code review
+  8. Document implementation and update guides
+- **Simple tasks** (fixes, adjustments, quick changes): Use direct approach
+- **Always**: Follow analyze → design → implement → integrate → validate → document flow
 
 **Architecture Compliance**:
 
