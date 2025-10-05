@@ -25,7 +25,8 @@
     "execa": "^9.6.0",
     "fs-extra": "^11.3.2",
     "inquirer": "^12.9.6",
-    "ora": "^9.0.0"
+    "ora": "^9.0.0",
+    "simple-git": "^3.28.0"
   },
   "devDependencies": {
     "eslint": "^9.36.0",
