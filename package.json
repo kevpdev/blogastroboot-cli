@@ -1,16 +1,52 @@
 {
   "name": "blogastroboot-cli",
-  "private": true,
+  "version": "1.0.0",
+  "description": "CLI pour générer et maintenir facilement des projets de blog basés sur Astro",
+  "type": "module",
+  "bin": {
+    "blogastroboot": "bin/blogastroboot.js",
+    "bab": "bin/blogastroboot.js"
+  },
   "scripts": {
-    "lint": "eslint .",
+    "dev": "node bin/blogastroboot.js",
     "test": "vitest",
+    "lint": "eslint src/",
     "format": "prettier --write ."
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "README.md"
+  ],
+  "keywords": [
+    "cli",
+    "astro",
+    "blog",
+    "starter",
+    "claude",
+    "template",
+    "generator"
+  ],
+  "author": "",
+  "license": "MIT",
+  "packageManager": "pnpm@10.15.0",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "chalk": "^5.6.2",
+    "commander": "^14.0.1",
+    "ejs": "^3.1.10",
+    "execa": "^9.6.0",
+    "fs-extra": "^11.3.2",
+    "inquirer": "^12.9.6",
+    "ora": "^9.0.0",
+    "simple-git": "^3.28.0"
   },
   "devDependencies": {
     "eslint": "^9.36.0",
     "husky": "^9.1.7",
     "prettier": "^3.6.2",
     "vitest": "^3.2.4"
-  },
-  "packageManager": "pnpm@10.15.0"
+  }
 }

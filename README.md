@@ -102,17 +102,16 @@ bab update --source autre-repo.git --branch feature/new-theme
 ## Structure des dossiers
 
 ```
-ROOT/
-├── package.json             # racine (outil global + devtools)
-├── pnpm-workspace.yaml     # workspace PNPM
-└── packages/
-    └── cli/                # package CLI (autonome)
-        ├── bin/            # exécutables (blogastroboot, bab)
-        ├── src/
-        │   ├── commands/   # commandes init et update
-        │   ├── generators/ # logique de génération de projet
-        │   └── utils/      # utilitaires (Git, prompts, erreurs)
-        └── package.json
+blogastroboot-cli/
+├── bin/
+│   └── blogastroboot.js    # point d'entrée CLI
+├── src/
+│   ├── commands/           # commandes init et update
+│   ├── generators/         # logique de génération de projet
+│   └── utils/              # utilitaires (Git, prompts, erreurs)
+├── package.json            # configuration CLI
+├── README.md
+└── tuto.md
 ```
 
 **Note :** Le starter n'est plus inclus localement. Il est récupéré à la demande depuis le dépôt distant `https://github.com/kevpdev/mon-blog-astro-starter-blog.git`.

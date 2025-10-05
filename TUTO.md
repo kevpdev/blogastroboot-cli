@@ -31,18 +31,15 @@ Nous allons créer un CLI moderne qui :
 
 ```
 blogastroboot-cli/
-├── package.json                    # Configuration workspace
-├── pnpm-workspace.yaml            # Workspace pnpm
-├── packages/
-│   └── cli/                       # Package CLI autonome
-│       ├── bin/
-│       │   └── blogastroboot.js   # Point d'entrée
-│       ├── src/
-│       │   ├── commands/          # Commandes init/update
-│       │   ├── generators/        # Logique génération projet
-│       │   └── utils/             # Utilitaires (Git, prompts, erreurs)
-│       └── package.json           # Config CLI
-└── README.md                      # Documentation
+├── bin/
+│   └── blogastroboot.js           # Point d'entrée CLI
+├── src/
+│   ├── commands/                  # Commandes init/update
+│   ├── generators/                # Logique génération projet
+│   └── utils/                     # Utilitaires (Git, prompts, erreurs)
+├── package.json                   # Configuration CLI
+├── README.md                      # Documentation
+└── tuto.md                        # Ce tutoriel
 ```
 
 ### Technologies utilisées
